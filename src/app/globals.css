@@ -1,0 +1,30 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fffaf5;
+  --foreground: #1c1917;
+  --muted: #57534e;
+  --primary: #c2410c;
+  --primary-foreground: #ffffff;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Campos a 16 px: iOS no hace zoom al enfocarlos. */
+input,
+select,
+textarea {
+  font-size: 16px;
+}

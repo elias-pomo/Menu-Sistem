@@ -1,0 +1,398 @@
+// Modelo multi-negocio: toda tabla del negocio lleva business_id y las hijas usan claves foráneas
+// compuestas (business_id, parent_id), así la base rechaza referencias cruzadas entre negocios.
+// Lo que Prisma no expresa (CHECK, índices parciales, FKs compuestas con columna opcional) está en
+// SQL dentro de la migración inicial. Importes en centavos (enteros). Fechas en UTC (timestamptz).
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  OWNER
+  MANAGER
+  STAFF
+}
+
+enum OptionGroupKind {
+  CHOICE // elegir entre opciones, con adicional opcional
+  REMOVE // ingredientes quitables, sin adicional
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PREPARING
+  READY
+  ON_THE_WAY
+  DELIVERED
+  CANCELLED
+}
+
+enum Fulfillment {
+  PICKUP
+  DELIVERY
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+}
+
+enum CancelReason {
+  OUT_OF_STOCK
+  OUT_OF_ZONE
+  CLOSED
+  INVALID_DATA
+  DUPLICATE
+  CUSTOMER_REQUEST
+  OTHER
+}
+
+model Business {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug                String   @unique @db.VarChar(40)
+  name                String   @db.VarChar(80)
+  address             String?  @db.VarChar(160)
+  logoUrl             String?  @map("logo_url")
+  primaryColor        String   @default("#c2410c") @map("primary_color") @db.VarChar(7)
+  whatsappE164        String?  @map("whatsapp_e164") @db.VarChar(20)
+  acceptingOrders     Boolean  @default(true) @map("accepting_orders")
+  pauseMessage        String?  @map("pause_message") @db.VarChar(200)
+  deliveryEnabled     Boolean  @default(false) @map("delivery_enabled")
+  deliveryFeeCents    Int      @default(0) @map("delivery_fee_cents")
+  minOrderCents       Int      @default(0) @map("min_order_cents")
+  acceptCash          Boolean  @default(true) @map("accept_cash")
+  acceptTransfer      Boolean  @default(false) @map("accept_transfer")
+  transferAlias       String?  @map("transfer_alias") @db.VarChar(60)
+  transferHolder      String?  @map("transfer_holder") @db.VarChar(80)
+  autoConfirm         Boolean  @default(false) @map("auto_confirm")
+  pendingAlertMinutes Int      @default(15) @map("pending_alert_minutes") @db.SmallInt
+  showPhotos          Boolean  @default(true) @map("show_photos")
+  showDescriptions    Boolean  @default(true) @map("show_descriptions")
+  menuVersion         Int      @default(1) @map("menu_version")
+  timezone            String   @default("America/Argentina/Buenos_Aires") @db.VarChar(40)
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  users             AppUser[]
+  pushSubscriptions PushSubscription[]
+  openingHours      OpeningHour[]
+  categories        Category[]
+  products          Product[]
+  optionGroups      OptionGroup[]
+  options           Option[]
+  productGroups     ProductOptionGroup[]
+  orders            Order[]
+  orderItems        OrderItem[]
+  orderItemOptions  OrderItemOption[]
+  statusHistory     OrderStatusHistory[]
+  auditLogs         AuditLog[]
+
+  @@map("business")
+}
+
+model AppUser {
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId   String    @map("business_id") @db.Uuid
+  // Guardado en minúsculas (CHECK en la migración); único en toda la plataforma.
+  email        String    @unique @db.VarChar(254)
+  name         String    @db.VarChar(80)
+  passwordHash String    @map("password_hash")
+  role         Role
+  isActive     Boolean   @default(true) @map("is_active")
+  lastLoginAt  DateTime? @map("last_login_at") @db.Timestamptz(3)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  business          Business           @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  sessions          Session[]
+  pushSubscriptions PushSubscription[]
+
+  @@unique([businessId, id])
+  @@index([businessId])
+  @@map("app_user")
+}
+
+model Session {
+  // Hash SHA-256 (hex) del token de la cookie: el token en claro nunca se guarda.
+  id         String   @id @db.Char(64)
+  userId     String   @map("user_id") @db.Uuid
+  expiresAt  DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  lastSeenAt DateTime @default(now()) @map("last_seen_at") @db.Timestamptz(3)
+  userAgent  String?  @map("user_agent") @db.VarChar(300)
+
+  user AppUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("session")
+}
+
+/// Conteo de eventos para límites de uso (login fallido, pedidos por IP o celular).
+model RateLimitHit {
+  id        BigInt   @id @default(autoincrement())
+  key       String   @db.VarChar(200)
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([key, createdAt])
+  @@map("rate_limit_hit")
+}
+
+model PushSubscription {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId String   @map("business_id") @db.Uuid
+  userId     String   @map("user_id") @db.Uuid
+  endpoint   String   @unique
+  p256dh     String
+  auth       String
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  user     AppUser  @relation(fields: [businessId, userId], references: [businessId, id], onDelete: Cascade)
+
+  @@map("push_subscription")
+}
+
+/// Horario semanal en minutos desde la medianoche (hora local del negocio). Varias filas por día
+/// permiten turno cortado; closes_min <= opens_min significa que el turno cruza la medianoche.
+model OpeningHour {
+  id         String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId String @map("business_id") @db.Uuid
+  weekday    Int    @db.SmallInt // 0 = domingo … 6 = sábado
+  opensMin   Int    @map("opens_min") @db.SmallInt
+  closesMin  Int    @map("closes_min") @db.SmallInt
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
+
+  @@unique([businessId, weekday, opensMin])
+  @@map("opening_hour")
+}
+
+model Category {
+  id         String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId String    @map("business_id") @db.Uuid
+  name       String    @db.VarChar(60)
+  position   Int       @default(0)
+  isActive   Boolean   @default(true) @map("is_active")
+  archivedAt DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdAt  DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  business Business  @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  products Product[]
+
+  @@unique([businessId, id])
+  @@index([businessId, position])
+  @@map("category")
+}
+
+model Product {
+  id          String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId  String    @map("business_id") @db.Uuid
+  categoryId  String    @map("category_id") @db.Uuid
+  name        String    @db.VarChar(120)
+  description String?   @db.VarChar(500)
+  priceCents  Int       @map("price_cents")
+  imageUrl    String?   @map("image_url")
+  tags        String[]  @default([])
+  isActive    Boolean   @default(true) @map("is_active")
+  isSoldOut   Boolean   @default(false) @map("is_sold_out")
+  position    Int       @default(0)
+  archivedAt  DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  business     Business             @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  category     Category             @relation(fields: [businessId, categoryId], references: [businessId, id], onDelete: Restrict)
+  optionGroups ProductOptionGroup[]
+
+  @@unique([businessId, id])
+  @@map("product")
+}
+
+model OptionGroup {
+  id         String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId String          @map("business_id") @db.Uuid
+  name       String          @db.VarChar(60)
+  kind       OptionGroupKind @default(CHOICE)
+  minSelect  Int             @default(0) @map("min_select") @db.SmallInt
+  maxSelect  Int             @default(1) @map("max_select") @db.SmallInt
+  archivedAt DateTime?       @map("archived_at") @db.Timestamptz(3)
+  createdAt  DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime        @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  business Business             @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  options  Option[]
+  products ProductOptionGroup[]
+
+  @@unique([businessId, id])
+  @@map("option_group")
+}
+
+model Option {
+  id              String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId      String  @map("business_id") @db.Uuid
+  groupId         String  @map("group_id") @db.Uuid
+  name            String  @db.VarChar(80)
+  priceDeltaCents Int     @default(0) @map("price_delta_cents")
+  isAvailable     Boolean @default(true) @map("is_available")
+  position        Int     @default(0)
+
+  business Business    @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  group    OptionGroup @relation(fields: [businessId, groupId], references: [businessId, id], onDelete: Restrict)
+
+  @@unique([businessId, id])
+  @@index([groupId, position])
+  @@map("option")
+}
+
+model ProductOptionGroup {
+  productId  String @map("product_id") @db.Uuid
+  groupId    String @map("group_id") @db.Uuid
+  businessId String @map("business_id") @db.Uuid
+  position   Int    @default(0)
+
+  business Business    @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  product  Product     @relation(fields: [businessId, productId], references: [businessId, id], onDelete: Cascade)
+  group    OptionGroup @relation(fields: [businessId, groupId], references: [businessId, id], onDelete: Restrict)
+
+  @@id([productId, groupId])
+  @@index([businessId, groupId])
+  @@map("product_option_group")
+}
+
+/// Pedido con copia histórica de todo lo necesario: cambiar el menú no lo modifica.
+model Order {
+  id                  String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId          String        @map("business_id") @db.Uuid
+  // Día del negocio (zona horaria del negocio) en que se creó; el código corto es único por día.
+  businessDate        DateTime      @map("business_date") @db.Date
+  publicCode          String        @map("public_code") @db.Char(4)
+  // 128 bits aleatorios en base64url: única credencial del seguimiento público.
+  publicToken         String        @unique @map("public_token") @db.Char(22)
+  clientRequestId     String        @map("client_request_id") @db.Uuid
+  status              OrderStatus
+  fulfillment         Fulfillment
+  customerName        String?       @map("customer_name") @db.VarChar(80)
+  customerPhone       String?       @map("customer_phone") @db.VarChar(20)
+  addressStreet       String?       @map("address_street") @db.VarChar(80)
+  addressNumber       String?       @map("address_number") @db.VarChar(10)
+  addressNeighborhood String?       @map("address_neighborhood") @db.VarChar(60)
+  addressUnit         String?       @map("address_unit") @db.VarChar(20)
+  addressReference    String?       @map("address_reference") @db.VarChar(120)
+  note                String?       @db.VarChar(300)
+  paymentMethod       PaymentMethod @map("payment_method")
+  cashChangeForCents  Int?          @map("cash_change_for_cents")
+  subtotalCents       Int           @map("subtotal_cents")
+  deliveryFeeCents    Int           @map("delivery_fee_cents")
+  totalCents          Int           @map("total_cents")
+  estimatedMinutes    Int?          @map("estimated_minutes") @db.SmallInt
+  paidAt              DateTime?     @map("paid_at") @db.Timestamptz(3)
+  paidBy              String?       @map("paid_by") @db.Uuid
+  cancelReason        CancelReason? @map("cancel_reason")
+  cancelNote          String?       @map("cancel_note") @db.VarChar(200)
+  anonymizedAt        DateTime?     @map("anonymized_at") @db.Timestamptz(3)
+  createdAt           DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  confirmedAt         DateTime?     @map("confirmed_at") @db.Timestamptz(3)
+  readyAt             DateTime?     @map("ready_at") @db.Timestamptz(3)
+  deliveredAt         DateTime?     @map("delivered_at") @db.Timestamptz(3)
+  cancelledAt         DateTime?     @map("cancelled_at") @db.Timestamptz(3)
+  updatedAt           DateTime      @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  business      Business             @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  items         OrderItem[]
+  statusHistory OrderStatusHistory[]
+
+  @@unique([businessId, id])
+  @@unique([businessId, clientRequestId])
+  @@unique([businessId, businessDate, publicCode])
+  @@index([businessId, createdAt(sort: Desc)])
+  @@index([businessId, customerPhone])
+  @@map("customer_order")
+}
+
+model OrderItem {
+  id                String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId        String  @map("business_id") @db.Uuid
+  orderId           String  @map("order_id") @db.Uuid
+  // Solo referencia: la FK compuesta opcional está en SQL (ON DELETE SET NULL (product_id)).
+  productId         String? @map("product_id") @db.Uuid
+  productName       String  @map("product_name") @db.VarChar(120)
+  categoryName      String  @map("category_name") @db.VarChar(60)
+  unitPriceCents    Int     @map("unit_price_cents")
+  optionsTotalCents Int     @map("options_total_cents")
+  quantity          Int     @db.SmallInt
+  lineTotalCents    Int     @map("line_total_cents")
+  note              String? @db.VarChar(200)
+  position          Int     @default(0) @db.SmallInt
+
+  business Business          @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  order    Order             @relation(fields: [businessId, orderId], references: [businessId, id], onDelete: Restrict)
+  options  OrderItemOption[]
+
+  @@unique([businessId, id])
+  @@index([orderId, position])
+  @@map("order_item")
+}
+
+model OrderItemOption {
+  id              String          @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId      String          @map("business_id") @db.Uuid
+  orderItemId     String          @map("order_item_id") @db.Uuid
+  // Solo referencia: la FK compuesta opcional está en SQL.
+  optionId        String?         @map("option_id") @db.Uuid
+  groupName       String          @map("group_name") @db.VarChar(60)
+  optionName      String          @map("option_name") @db.VarChar(80)
+  kind            OptionGroupKind
+  priceDeltaCents Int             @map("price_delta_cents")
+
+  business  Business  @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  orderItem OrderItem @relation(fields: [businessId, orderItemId], references: [businessId, id], onDelete: Restrict)
+
+  @@index([orderItemId])
+  @@map("order_item_option")
+}
+
+/// Solo inserción: cada cambio de estado de un pedido.
+model OrderStatusHistory {
+  id         String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId String       @map("business_id") @db.Uuid
+  orderId    String       @map("order_id") @db.Uuid
+  fromStatus OrderStatus? @map("from_status")
+  toStatus   OrderStatus  @map("to_status")
+  // Nulo si lo hizo el cliente o el sistema. FK compuesta opcional en SQL.
+  userId     String?      @map("user_id") @db.Uuid
+  reason     String?      @db.VarChar(300)
+  createdAt  DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
+  order    Order    @relation(fields: [businessId, orderId], references: [businessId, id], onDelete: Restrict)
+
+  @@index([orderId, createdAt])
+  @@map("order_status_history")
+}
+
+/// Solo inserción: historial administrativo. Nunca guarda contraseñas ni tokens.
+model AuditLog {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId String   @map("business_id") @db.Uuid
+  // FK compuesta opcional en SQL.
+  userId     String?  @map("user_id") @db.Uuid
+  action     String   @db.VarChar(60)
+  entityType String   @map("entity_type") @db.VarChar(40)
+  entityId   String?  @map("entity_id") @db.VarChar(64)
+  before     Json?
+  after      Json?
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
+
+  @@index([businessId, createdAt(sort: Desc)])
+  @@map("audit_log")
+}
