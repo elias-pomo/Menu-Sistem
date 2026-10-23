@@ -21,7 +21,14 @@ identifica por su `slug` (`/{slug}`).
 - Fases 1 a 3 hechas: docs y ADRs, proyecto base con CI, esquema y migración, seed, módulos de dinero,
   teléfono, cálculo de pedidos, estados, autenticación, permisos y auditoría, con tests.
 - Fase 0 (entrevistas, local piloto, consulta legal) pendiente: la hace el usuario. Guion en `docs/fase-0/`.
-- Sigue la Fase 6a (CRUD de menú), después la 4 (menú público y carrito). Ver la sección 20 del plan.
+- Fase 4 hecha (se adelantó a la 6a porque el menú del piloto ya estaba cargado): menú público `/{slug}`, hoja de
+  producto, carrito `/{slug}/carrito` en localStorage y `GET /api/v1/public/{slug}/menu`. El botón "Continuar" del
+  carrito queda deshabilitado hasta la Fase 5 (crear pedidos). Sigue la 6a (CRUD de menú y fotos) y después la 5.
+- Menú público: `obtenerMenuPublico` (`modulos/menu/publico.ts`) con `"use cache"` y la etiqueta `etiquetaMenu(slug)`;
+  todo cambio de menú tiene que llamar a `revalidateTag(etiquetaMenu(slug))`. Abierto/cerrado se calcula en el navegador
+  (`useAhora`, sin diferencias de hidratación); el servidor valida al confirmar.
+- e2e: `npm run test:e2e` usa la base local con el piloto cargado y fija la hora con `page.clock`. El Fast Refresh a
+  veces deja colgada la pestaña del navegador del panel: si una página no se hidrata, probar en una pestaña nueva.
 - Piloto: **Hawken's Food** (`/hawkens-food`), local ficticio con el nombre de la marca Hawken y su menú real. Fotos
   genéricas (todavía no cargadas). Se carga con `npm run db:piloto` (local) o `npm run db:prod:piloto` (Neon).
 
@@ -31,10 +38,11 @@ identifica por su `slug` (`/{slug}`).
 - **Neon:** proyecto `steep-flower-76462263` (org `org-divine-sunset-27667948`), rama `production`, región `aws-sa-east-1`.
   Vinculado con `.neon` y `neon.ts` (solo Postgres). Migración inicial aplicada y piloto cargado.
 - **Vercel:** plan **Hobby** hasta el primer cliente que pague (ADR-002); después Pro. Proyecto `ecovex-menu-sistem`
-  (scope `elias-projects-51814171`), producción en https://ecovex-menu-sistem.vercel.app, región `gru1`. Variables en
-  Production y Preview: `DATABASE_URL` (pooled de Neon, sensible) y `DATABASE_POOL_MAX=3`. Los previews usan la misma
-  base que producción: crear una rama de Neon para previews antes de que haya escrituras desde la app.
-  Si se cambian variables, hace falta un redeploy para que las tome.
+  (scope `elias-projects-51814171`), producción en https://ecovex-menu-sistem.vercel.app, región `gru1`.
+  `DATABASE_URL` (pooled, sensible) apunta a la rama `production` de Neon en Production y a una rama de preview
+  (`ep-silent-feather`) en Preview. `DATABASE_POOL_MAX=3` en los dos. Si se cambian variables, hace falta un redeploy.
+- `.env.preview` (no está en git): conexiones de la rama de preview. Cada migración nueva se aplica también ahí con
+  `npm run db:preview:migrate`, antes de mergear a `main`.
 - `.env.produccion` (no está en git): variables de Neon (`neon env pull --file .env.produccion`) y el usuario dueño del
   piloto. Lo usan `npm run db:prod:*`, `npm run prod:smoke` y `npm run start:prod`. **No renombrarlo a `.env.production*`**:
   Next lo cargaría solo en el build. El `.env` queda para la base local.

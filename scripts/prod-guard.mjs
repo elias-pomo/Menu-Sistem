@@ -8,4 +8,4 @@ if (!host.endsWith(".neon.tech")) {
   console.error("No se encontró la base de Neon en .env.produccion (DATABASE_URL_UNPOOLED). Corré: neon env pull --file .env.produccion");
   process.exit(1);
 }
-console.log(`Base de producción: ${host}`);
+console.log(`Base de Neon: ${host}`);

@@ -23,7 +23,8 @@
     "db:prod:status": "node --env-file=.env.produccion scripts/prod-guard.mjs && node --env-file=.env.produccion node_modules/prisma/build/index.js migrate status",
     "db:prod:piloto": "node --env-file=.env.produccion scripts/prod-guard.mjs && node --env-file=.env.produccion node_modules/tsx/dist/cli.mjs --conditions=react-server prisma/piloto.ts",
     "prod:smoke": "node --env-file=.env.produccion scripts/prod-guard.mjs && node --env-file=.env.produccion node_modules/tsx/dist/cli.mjs --conditions=react-server scripts/prod-smoke.ts",
-    "start:prod": "node --env-file=.env.produccion node_modules/next/dist/bin/next start"
+    "start:prod": "node --env-file=.env.produccion node_modules/next/dist/bin/next start",
+    "db:preview:migrate": "node --env-file=.env.preview scripts/prod-guard.mjs && node --env-file=.env.preview node_modules/prisma/build/index.js migrate deploy"
   },
   "dependencies": {
     "@date-fns/tz": "^1.5.0",
@@ -35,6 +36,7 @@
     "@vercel/functions": "^3.10.3",
     "date-fns": "^4.4.0",
     "libphonenumber-js": "^1.13.15",
+    "lucide-react": "^1.61.0",
     "next": "16.4.2",
     "pg": "^8.23.1",
     "react": "19.3.0",
