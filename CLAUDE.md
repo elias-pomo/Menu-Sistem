@@ -30,8 +30,11 @@ identifica por su `slug` (`/{slug}`).
 - **GitHub:** https://github.com/elias-pomo/Menu-Sistem (rama `main`).
 - **Neon:** proyecto `steep-flower-76462263` (org `org-divine-sunset-27667948`), rama `production`, región `aws-sa-east-1`.
   Vinculado con `.neon` y `neon.ts` (solo Postgres). Migración inicial aplicada y piloto cargado.
-- **Vercel:** plan **Hobby** hasta el primer cliente que pague (ADR-002); después Pro. Proyecto todavía sin crear.
-  Variables a cargar: `DATABASE_URL` (pooled de Neon) y `DATABASE_POOL_MAX` (3 a 5).
+- **Vercel:** plan **Hobby** hasta el primer cliente que pague (ADR-002); después Pro. Proyecto `ecovex-menu-sistem`
+  (scope `elias-projects-51814171`), producción en https://ecovex-menu-sistem.vercel.app, región `gru1`. Variables en
+  Production y Preview: `DATABASE_URL` (pooled de Neon, sensible) y `DATABASE_POOL_MAX=3`. Los previews usan la misma
+  base que producción: crear una rama de Neon para previews antes de que haya escrituras desde la app.
+  Si se cambian variables, hace falta un redeploy para que las tome.
 - `.env.produccion` (no está en git): variables de Neon (`neon env pull --file .env.produccion`) y el usuario dueño del
   piloto. Lo usan `npm run db:prod:*`, `npm run prod:smoke` y `npm run start:prod`. **No renombrarlo a `.env.production*`**:
   Next lo cargaría solo en el build. El `.env` queda para la base local.
