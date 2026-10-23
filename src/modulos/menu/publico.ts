@@ -32,7 +32,7 @@ export async function obtenerMenuPublico(slug: string): Promise<MenuPublico | nu
               optionGroups: {
                 where: { group: { archivedAt: null } },
                 orderBy: { position: "asc" },
-                include: { group: { include: { options: { orderBy: { position: "asc" } } } } },
+                include: { group: { include: { options: { where: { archivedAt: null }, orderBy: { position: "asc" } } } } },
               },
             },
           },

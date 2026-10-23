@@ -23,7 +23,15 @@ identifica por su `slug` (`/{slug}`).
 - Fase 0 (entrevistas, local piloto, consulta legal) pendiente: la hace el usuario. Guion en `docs/fase-0/`.
 - Fase 4 hecha (se adelantó a la 6a porque el menú del piloto ya estaba cargado): menú público `/{slug}`, hoja de
   producto, carrito `/{slug}/carrito` en localStorage y `GET /api/v1/public/{slug}/menu`. El botón "Continuar" del
-  carrito queda deshabilitado hasta la Fase 5 (crear pedidos). Sigue la 6a (CRUD de menú y fotos) y después la 5.
+  carrito queda deshabilitado hasta la Fase 5 (crear pedidos).
+- Fase 6a hecha: panel en `/admin` (ingreso en `/admin/ingresar`, `proxy.ts` hace el chequeo optimista), menú del
+  panel con agotado/visible en un toque (STAFF) y CRUD de categorías, productos y grupos de opciones (MANAGER),
+  con auditoría, `menu_version` y `revalidateTag(etiquetaMenu(slug), { expire: 0 })`. Servicio en `modulos/menu/admin.ts`.
+  Fotos: `POST /api/v1/admin/uploads/image` (tipo por contenido, ≤ 5 MB) a Vercel Blob; necesita `BLOB_READ_WRITE_TOKEN`.
+  Las opciones quitadas de un grupo se archivan (`option.archived_at`). Sigue la Fase 5 (pedidos y panel de pedidos).
+- Formularios del panel: `method="post"` y botón deshabilitado hasta hidratar (`useHidratado`), para que un envío
+  nativo nunca ponga datos (ni la contraseña) en la URL.
+- PGlite admite una sola conexión: no correr `npm test` con `npm run dev` abierto (da "Connection terminated").
 - Menú público: `obtenerMenuPublico` (`modulos/menu/publico.ts`) con `"use cache"` y la etiqueta `etiquetaMenu(slug)`;
   todo cambio de menú tiene que llamar a `revalidateTag(etiquetaMenu(slug))`. Abierto/cerrado se calcula en el navegador
   (`useAhora`, sin diferencias de hidratación); el servidor valida al confirmar.

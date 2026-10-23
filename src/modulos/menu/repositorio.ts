@@ -28,7 +28,7 @@ export async function cargarProductosParaPedido(
       optionGroups: {
         where: { group: { archivedAt: null } },
         orderBy: { position: "asc" },
-        include: { group: { include: { options: { orderBy: { position: "asc" } } } } },
+        include: { group: { include: { options: { where: { archivedAt: null }, orderBy: { position: "asc" } } } } },
       },
     },
   });

@@ -1,5 +1,7 @@
 import "server-only";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { AppError } from "@/lib/errores";
 import { puede, tieneRolMinimo, type Permiso, type Rol } from "./permisos";
 import { DURACION_SESION_DIAS, NOMBRE_COOKIE, validarSesion, type UsuarioSesion } from "./sesiones";
@@ -28,6 +30,8 @@ export async function borrarCookieSesion() {
 }
 
 export async function sesionActual(): Promise<UsuarioSesion | null> {
+  // La sesión depende de la hora (vencimiento): siempre en el momento de la solicitud, nunca prerenderizada.
+  await connection();
   return validarSesion(await leerTokenSesion());
 }
 
@@ -42,5 +46,12 @@ export async function requerirRol(minimo: Rol): Promise<UsuarioSesion> {
 export async function requerirPermiso(permiso: Permiso): Promise<UsuarioSesion> {
   const sesion = await requerirRol("STAFF");
   if (!puede(sesion.role, permiso)) throw new AppError("FORBIDDEN", "No tenés permiso para hacer esto.");
+  return sesion;
+}
+
+/** Para páginas del panel: sin sesión vigente, al ingreso. */
+export async function sesionDePagina(): Promise<UsuarioSesion> {
+  const sesion = await sesionActual();
+  if (!sesion) redirect("/admin/ingresar");
   return sesion;
 }

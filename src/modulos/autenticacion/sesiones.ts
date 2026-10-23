@@ -15,7 +15,7 @@ const DURACION_MS = DURACION_SESION_DIAS * 86_400_000;
 const INTERVALO_ULTIMO_USO_MS = 5 * 60_000;
 
 /** En producción, el prefijo __Host- obliga a Secure, path=/ y sin Domain. */
-export const NOMBRE_COOKIE = process.env.NODE_ENV === "production" ? "__Host-sesion" : "sesion";
+export { NOMBRE_COOKIE } from "./cookie";
 
 export type UsuarioSesion = {
   userId: string;

@@ -236,13 +236,15 @@ model OptionGroup {
 }
 
 model Option {
-  id              String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  businessId      String  @map("business_id") @db.Uuid
-  groupId         String  @map("group_id") @db.Uuid
-  name            String  @db.VarChar(80)
-  priceDeltaCents Int     @default(0) @map("price_delta_cents")
-  isAvailable     Boolean @default(true) @map("is_available")
-  position        Int     @default(0)
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  businessId      String    @map("business_id") @db.Uuid
+  groupId         String    @map("group_id") @db.Uuid
+  name            String    @db.VarChar(80)
+  priceDeltaCents Int       @default(0) @map("price_delta_cents")
+  isAvailable     Boolean   @default(true) @map("is_available")
+  position        Int       @default(0)
+  // Quitada del grupo desde el panel: no se muestra ni se puede pedir; los pedidos conservan su copia.
+  archivedAt      DateTime? @map("archived_at") @db.Timestamptz(3)
 
   business Business    @relation(fields: [businessId], references: [id], onDelete: Restrict)
   group    OptionGroup @relation(fields: [businessId, groupId], references: [businessId, id], onDelete: Restrict)
