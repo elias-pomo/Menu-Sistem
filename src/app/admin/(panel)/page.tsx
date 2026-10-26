@@ -1,17 +1,20 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Suspense } from "react";
+import { PanelPedidos } from "@/componentes/panel/panel-pedidos";
+import { sesionDePagina } from "@/modulos/autenticacion";
 
 export const metadata: Metadata = { title: "Pedidos" };
 
-/** Pantalla de pedidos: llega en la Fase 5. */
+/** Pantalla de inicio del panel: los pedidos del día. */
 export default function PaginaPedidos() {
   return (
-    <section>
-      <h1 className="text-2xl font-bold">Pedidos</h1>
-      <p className="mt-2 text-muted">La recepción de pedidos se habilita en la próxima etapa.</p>
-      <Link href="/admin/menu" className="mt-4 inline-flex h-11 items-center rounded-full bg-primary px-5 font-semibold text-primary-foreground">
-        Ir al menú
-      </Link>
-    </section>
+    <Suspense fallback={<p className="text-muted">Cargando pedidos…</p>}>
+      <Contenido />
+    </Suspense>
   );
+}
+
+async function Contenido() {
+  await sesionDePagina();
+  return <PanelPedidos />;
 }

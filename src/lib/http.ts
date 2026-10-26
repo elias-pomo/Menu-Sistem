@@ -1,5 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
+import { connection } from "next/server";
 import type { z } from "zod";
 import { AppError, respuestaError } from "./errores";
 
@@ -15,6 +16,9 @@ export function nuevoRequestId() {
 /** Ejecuta el handler y convierte cualquier error en la respuesta de error de la API. */
 export async function manejar(handler: (requestId: string) => Promise<Response>): Promise<Response> {
   const requestId = nuevoRequestId();
+  // Las rutas de la API son siempre dinámicas. Fuera del try: la señal con la que Next corta el
+  // prerender no tiene que terminar convertida en un error 500.
+  await connection();
   try {
     return await handler(requestId);
   } catch (error) {

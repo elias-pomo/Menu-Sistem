@@ -159,19 +159,35 @@ export function CarritoVista({ menu }: { menu: MenuPublico }) {
       {carrito.items.length > 0 && (
         <div className="fixed inset-x-0 bottom-0 z-20 border-t border-stone-200 bg-white px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3">
           <div className="mx-auto max-w-2xl">
-            <button
-              type="button"
-              disabled
-              className="flex h-14 w-full items-center justify-between rounded-full bg-[var(--primary)] px-5 font-semibold text-[var(--primary-foreground)] disabled:opacity-50"
-            >
-              <span>Continuar</span>
-              <span className="tabular-nums">{formatearPesos(resumen.subtotalCents)}</span>
-            </button>
-            <p className="mt-2 text-center text-sm text-muted">
-              {apertura && !apertura.abierto
-                ? "Ahora no estamos tomando pedidos."
-                : "Muy pronto vas a poder enviar tu pedido desde acá."}
-            </p>
+            {apertura?.abierto && !resumen.hayProblemas && resumen.faltanteMinimoCents === 0 ? (
+              <Link
+                href={`/${negocio.slug}/confirmar`}
+                className="flex h-14 w-full items-center justify-between rounded-full bg-[var(--primary)] px-5 font-semibold text-[var(--primary-foreground)]"
+              >
+                <span>Continuar</span>
+                <span className="tabular-nums">{formatearPesos(resumen.subtotalCents)}</span>
+              </Link>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  disabled
+                  className="flex h-14 w-full items-center justify-between rounded-full bg-[var(--primary)] px-5 font-semibold text-[var(--primary-foreground)] disabled:opacity-50"
+                >
+                  <span>Continuar</span>
+                  <span className="tabular-nums">{formatearPesos(resumen.subtotalCents)}</span>
+                </button>
+                <p className="mt-2 text-center text-sm text-muted">
+                  {apertura && !apertura.abierto
+                    ? "Ahora no estamos tomando pedidos."
+                    : resumen.hayProblemas
+                      ? "Resolvé los cambios del menú para seguir."
+                      : resumen.faltanteMinimoCents > 0
+                        ? `Te faltan ${formatearPesos(resumen.faltanteMinimoCents)} para el pedido mínimo.`
+                        : ""}
+                </p>
+              </>
+            )}
           </div>
         </div>
       )}

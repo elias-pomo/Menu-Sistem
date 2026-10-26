@@ -12,10 +12,12 @@ export default defineConfig({
     locale: "es-AR",
     timezoneId: "America/Argentina/Buenos_Aires",
   },
+  // Build de producción contra la base local: sin el Fast Refresh del modo desarrollo, que a veces
+  // recarga la página en medio de una prueba. Para probar contra `npm run dev`, levantarlo antes.
   webServer: {
-    command: "npm run dev",
+    command: "npm run build && npm run start",
     url: "http://localhost:3000/api/v1/health",
     reuseExistingServer: true,
-    timeout: 120_000,
+    timeout: 300_000,
   },
 });

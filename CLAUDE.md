@@ -28,15 +28,26 @@ identifica por su `slug` (`/{slug}`).
   panel con agotado/visible en un toque (STAFF) y CRUD de categorías, productos y grupos de opciones (MANAGER),
   con auditoría, `menu_version` y `revalidateTag(etiquetaMenu(slug), { expire: 0 })`. Servicio en `modulos/menu/admin.ts`.
   Fotos: `POST /api/v1/admin/uploads/image` (tipo por contenido, ≤ 5 MB) a Vercel Blob (store **público**); en Vercel autentica con `BLOB_STORE_ID` + OIDC, en local sirve `BLOB_READ_WRITE_TOKEN`.
-  Las opciones quitadas de un grupo se archivan (`option.archived_at`). Sigue la Fase 5 (pedidos y panel de pedidos).
+  Las opciones quitadas de un grupo se archivan (`option.archived_at`).
+- Fase 5a hecha: `/{slug}/confirmar` (datos y pago; recuerda nombre, celular y dirección en el dispositivo),
+  `POST /api/v1/public/{slug}/orders` (`modulos/pedidos/publico.ts`: idempotencia por `clientRequestId`, horario,
+  límites RN-17, cálculo fresco, código corto con reintento), seguimiento `/{slug}/pedido/{token}` (cada 15 s, sin
+  teléfono ni dirección) y panel de pedidos en `/admin` (`use-pedidos.ts`: polling 5/10 s con cursor `since`, sonido
+  con "Activar sonido", contador en el título, demorados, confirmar con minutos, cancelar con motivo, cobrado).
+  El cliente no puede cancelar (decisión diferida del plan). Sigue la 5b: push y PWA instalable del panel.
+- `manejar()` (`lib/http.ts`) llama a `connection()` fuera del try: si no, la señal de prerender de Next se
+  registraba como error 500 en el build.
 - Formularios del panel: `method="post"` y botón deshabilitado hasta hidratar (`useHidratado`), para que un envío
   nativo nunca ponga datos (ni la contraseña) en la URL.
 - PGlite admite una sola conexión: no correr `npm test` con `npm run dev` abierto (da "Connection terminated").
 - Menú público: `obtenerMenuPublico` (`modulos/menu/publico.ts`) con `"use cache"` y la etiqueta `etiquetaMenu(slug)`;
   todo cambio de menú tiene que llamar a `revalidateTag(etiquetaMenu(slug))`. Abierto/cerrado se calcula en el navegador
   (`useAhora`, sin diferencias de hidratación); el servidor valida al confirmar.
-- e2e: `npm run test:e2e` usa la base local con el piloto cargado y fija la hora con `page.clock`. El Fast Refresh a
-  veces deja colgada la pestaña del navegador del panel: si una página no se hidrata, probar en una pestaña nueva.
+- e2e: `npm run test:e2e` compila y levanta el build de producción (`next build && next start`) contra la base local,
+  porque el Fast Refresh de `next dev` recarga páginas en medio de las pruebas. Usa el seed y el piloto; fija la hora
+  del navegador con `page.clock` (el servidor usa la hora real: `pedido.spec.ts` abre la-esquina todo el día y después
+  restaura sus horarios). Después de los e2e, PGlite a veces queda cortando conexiones ("Server has closed the
+  connection"): `npx prisma dev stop menu-local` y volver a levantarla con `npm run db:dev`.
 - Piloto: **Hawken's Food** (`/hawkens-food`), local ficticio con el nombre de la marca Hawken y su menú real. Fotos
   genéricas (todavía no cargadas). Se carga con `npm run db:piloto` (local) o `npm run db:prod:piloto` (Neon).
 
