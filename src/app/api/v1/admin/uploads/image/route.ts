@@ -16,7 +16,9 @@ export async function POST(request: Request) {
   return manejar(async () => {
     verificarOrigen(request);
     const sesion = await requerirRol("MANAGER");
-    if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    // En Vercel el store se conecta con BLOB_STORE_ID (autenticación OIDC automática); en local
+    // también sirve un BLOB_READ_WRITE_TOKEN.
+    if (!process.env.BLOB_STORE_ID && !process.env.BLOB_READ_WRITE_TOKEN) {
       throw new AppError("SERVICE_UNAVAILABLE", "Falta configurar el almacenamiento de fotos (Vercel Blob).");
     }
 

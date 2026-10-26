@@ -27,7 +27,7 @@ identifica por su `slug` (`/{slug}`).
 - Fase 6a hecha: panel en `/admin` (ingreso en `/admin/ingresar`, `proxy.ts` hace el chequeo optimista), menú del
   panel con agotado/visible en un toque (STAFF) y CRUD de categorías, productos y grupos de opciones (MANAGER),
   con auditoría, `menu_version` y `revalidateTag(etiquetaMenu(slug), { expire: 0 })`. Servicio en `modulos/menu/admin.ts`.
-  Fotos: `POST /api/v1/admin/uploads/image` (tipo por contenido, ≤ 5 MB) a Vercel Blob; necesita `BLOB_READ_WRITE_TOKEN`.
+  Fotos: `POST /api/v1/admin/uploads/image` (tipo por contenido, ≤ 5 MB) a Vercel Blob (store **público**); en Vercel autentica con `BLOB_STORE_ID` + OIDC, en local sirve `BLOB_READ_WRITE_TOKEN`.
   Las opciones quitadas de un grupo se archivan (`option.archived_at`). Sigue la Fase 5 (pedidos y panel de pedidos).
 - Formularios del panel: `method="post"` y botón deshabilitado hasta hidratar (`useHidratado`), para que un envío
   nativo nunca ponga datos (ni la contraseña) en la URL.
@@ -76,8 +76,6 @@ identifica por su `slug` (`/{slug}`).
 
 ## Base de datos y trampas conocidas
 
-- La app usa node-postgres ( + ) con  de , como recomienda
-  Neon para Vercel. Migraciones por la conexión directa (), la app por la pooled.
 - La app usa node-postgres (`pg.Pool` + `@prisma/adapter-pg`) con `attachDatabasePool` de `@vercel/functions`, como
   recomienda Neon para Vercel. La app va por la conexión pooled (`DATABASE_URL`); migraciones y scripts por la directa
   (`DATABASE_URL_UNPOOLED`).
