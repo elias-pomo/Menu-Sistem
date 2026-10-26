@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { db } from "@/lib/bd";
 import type { UsuarioSesion } from "@/modulos/autenticacion";
-import { desuscribir, enviarAlNegocio, suscribir, type MensajePush } from "@/modulos/notificaciones";
+import { desuscribir, enviarAlNegocio, enviarAlUsuario, suscribir, type MensajePush } from "@/modulos/notificaciones";
 import { hayBase, sesionDe } from "./ayudantes";
 
 /** Suscripciones push del panel (Fase 5b) contra la base local con el seed. El envío real se simula. */
@@ -56,8 +56,18 @@ describe.skipIf(!hayBase)("push del panel (integración)", () => {
       if (d.endpoint.endsWith("caida")) throw Object.assign(new Error("Server error"), { statusCode: 500 });
     });
     expect(r.borrados).toBeGreaterThanOrEqual(1);
+    expect(r.fallidos).toContain(500);
     expect(await db.pushSubscription.count({ where: { endpoint: `${PREFIJO}vencida` } })).toBe(0);
     expect(await db.pushSubscription.count({ where: { endpoint: `${PREFIJO}caida` } })).toBe(1);
+  });
+
+  it("el aviso de prueba va solo a los navegadores del usuario de la sesión", async () => {
+    await suscribir(staffA, sub("prueba-staff"));
+    const destinos: string[] = [];
+    const r = await enviarAlUsuario(staffA, mensaje, async (d) => void destinos.push(d.endpoint));
+    expect(destinos).toContain(`${PREFIJO}prueba-staff`);
+    expect(destinos).not.toContain(`${PREFIJO}compartido`); // es del dueño
+    expect(r.destinos).toBe(destinos.length);
   });
 
   it("la baja solo borra el navegador del mismo usuario y negocio", async () => {

@@ -16,7 +16,7 @@ export function clavePublicaPush(): string | null {
   return process.env.VAPID_PUBLIC_KEY || null;
 }
 
-function configurado(): boolean {
+export function pushConfigurado(): boolean {
   const { VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT } = process.env;
   return Boolean(VAPID_PUBLIC_KEY && VAPID_PRIVATE_KEY && VAPID_SUBJECT);
 }
@@ -39,14 +39,28 @@ export async function desuscribir(sesion: UsuarioSesion, endpoint: string) {
   await db.pushSubscription.deleteMany({ where: { endpoint, businessId: sesion.businessId, userId: sesion.userId } });
 }
 
-/** Envía el mensaje a todos los navegadores de usuarios activos del negocio. Nunca lanza. */
-export async function enviarAlNegocio(businessId: NegocioId, mensaje: MensajePush, enviar = enviarUno): Promise<{ enviados: number; borrados: number }> {
+export type ResultadoEnvio = { destinos: number; enviados: number; borrados: number; fallidos: (number | null)[] };
+
+type Enviar = (destino: SuscripcionDatos, cuerpo: string) => Promise<unknown>;
+
+/** Envía el mensaje a todos los navegadores de usuarios activos del negocio. Los errores de envío no lanzan. */
+export function enviarAlNegocio(businessId: NegocioId, mensaje: MensajePush, enviar: Enviar = enviarUno): Promise<ResultadoEnvio> {
+  return enviarA(businessId, {}, mensaje, enviar);
+}
+
+/** Envía el mensaje solo a los navegadores del usuario de la sesión (aviso de prueba). */
+export function enviarAlUsuario(sesion: UsuarioSesion, mensaje: MensajePush, enviar: Enviar = enviarUno): Promise<ResultadoEnvio> {
+  return enviarA(sesion.businessId, { userId: sesion.userId }, mensaje, enviar);
+}
+
+async function enviarA(businessId: NegocioId, filtro: { userId?: string }, mensaje: MensajePush, enviar: Enviar): Promise<ResultadoEnvio> {
   const destinos = await db.pushSubscription.findMany({
-    where: { businessId, user: { isActive: true } },
+    where: { businessId, ...filtro, user: { isActive: true } },
     select: { id: true, endpoint: true, p256dh: true, auth: true },
   });
   const cuerpo = JSON.stringify(mensaje);
   const vencidas: string[] = [];
+  const fallidos: (number | null)[] = [];
   let enviados = 0;
   await Promise.all(
     destinos.map(async (d) => {
@@ -55,14 +69,19 @@ export async function enviarAlNegocio(businessId: NegocioId, mensaje: MensajePus
         enviados++;
       } catch (error) {
         // 404/410: el navegador dio de baja la suscripción (desinstaló, borró datos). Se descarta.
-        const status = error instanceof WebPushError ? error.statusCode : (error as { statusCode?: number })?.statusCode;
+        const status = error instanceof WebPushError ? error.statusCode : ((error as { statusCode?: number })?.statusCode ?? null);
         if (status === 404 || status === 410) vencidas.push(d.id);
-        else console.error(JSON.stringify({ evento: "push_error", businessId, status: status ?? null, error: String(error) }));
+        else {
+          fallidos.push(status);
+          console.error(JSON.stringify({ evento: "push_error", businessId, status, servicio: new URL(d.endpoint).host, error: String(error) }));
+        }
       }
     }),
   );
   if (vencidas.length) await db.pushSubscription.deleteMany({ where: { id: { in: vencidas }, businessId } });
-  return { enviados, borrados: vencidas.length };
+  const resultado = { destinos: destinos.length, enviados, borrados: vencidas.length, fallidos };
+  console.log(JSON.stringify({ evento: "push_enviado", businessId, tag: mensaje.tag, ...resultado }));
+  return resultado;
 }
 
 async function enviarUno(destino: SuscripcionDatos, cuerpo: string) {
@@ -77,7 +96,10 @@ async function enviarUno(destino: SuscripcionDatos, cuerpo: string) {
 
 /** Aviso de pedido nuevo. Pensado para correr en `after()`, después de responder al cliente. */
 export async function avisarPedidoNuevo(businessId: NegocioId, pedido: AvisoPedido) {
-  if (!configurado()) return;
+  if (!pushConfigurado()) {
+    console.error(JSON.stringify({ evento: "push_sin_configurar", businessId }));
+    return;
+  }
   try {
     await enviarAlNegocio(businessId, mensajePedidoNuevo(pedido));
   } catch (error) {

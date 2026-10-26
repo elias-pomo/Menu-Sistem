@@ -34,3 +34,8 @@ export function mensajePedidoNuevo(pedido: AvisoPedido): MensajePush {
     url: "/admin",
   };
 }
+
+/** Aviso que el usuario se manda a sí mismo desde el panel para comprobar que le llegan. */
+export function mensajePrueba(): MensajePush {
+  return { title: "Avisos activados", body: "Así te va a llegar cada pedido nuevo.", tag: "prueba", url: "/admin" };
+}

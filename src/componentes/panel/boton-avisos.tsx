@@ -2,6 +2,7 @@
 
 import { BellRing, Smartphone } from "lucide-react";
 import { useEffect, useState } from "react";
+import { ErrorApi, llamarApi } from "./api";
 import { activarAvisos, desactivarAvisos, estadoAvisos, type EstadoAvisos } from "./avisos-push";
 
 const ETIQUETA: Record<EstadoAvisos, string> = {
@@ -20,6 +21,8 @@ const ETIQUETA: Record<EstadoAvisos, string> = {
 export function BotonAvisos({ clavePublica }: { clavePublica: string | null }) {
   const [estado, setEstado] = useState<EstadoAvisos>("cargando");
   const [error, setError] = useState("");
+  const [ocupado, setOcupado] = useState(false);
+  const [prueba, setPrueba] = useState("");
 
   useEffect(() => {
     if (!clavePublica) return;
@@ -44,13 +47,35 @@ export function BotonAvisos({ clavePublica }: { clavePublica: string | null }) {
 
   async function alternar() {
     setError("");
+    setPrueba("");
+    setOcupado(true);
     try {
       if (estado === "activo") {
         await desactivarAvisos();
         setEstado("inactivo");
-      } else setEstado(await activarAvisos(clavePublica!));
+      } else {
+        const nuevo = await activarAvisos(clavePublica!);
+        setEstado(nuevo);
+        if (nuevo === "activo") await probar();
+      }
     } catch {
       setError("No se pudieron activar los avisos. Probá de nuevo.");
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  /** Se manda un aviso a sí mismo: así se ve enseguida si llegan. */
+  async function probar() {
+    setError("");
+    setPrueba("");
+    try {
+      const r = await llamarApi<{ enviados: number; fallidos: unknown[] }>("POST", "/api/v1/admin/push/test");
+      if (r.enviados > 0) setPrueba("Te mandamos un aviso de prueba. Si no aparece, revisá que las notificaciones de la app estén permitidas en el celular.");
+      else if (r.fallidos.length) setError("El servicio de avisos rechazó el envío. Desactivá y volvé a activar los avisos.");
+      else setError("Este dispositivo no quedó registrado. Desactivá y volvé a activar los avisos.");
+    } catch (err) {
+      setError(err instanceof ErrorApi ? err.message : "No se pudo mandar el aviso de prueba.");
     }
   }
 
@@ -60,13 +85,23 @@ export function BotonAvisos({ clavePublica }: { clavePublica: string | null }) {
       <button
         type="button"
         onClick={alternar}
-        disabled={estado === "cargando" || estado === "bloqueado"}
+        disabled={ocupado || estado === "cargando" || estado === "bloqueado"}
         aria-pressed={activo}
         className={`inline-flex h-11 items-center gap-2 rounded-full px-4 text-sm font-medium disabled:opacity-60 ${activo ? "bg-emerald-50 text-emerald-800" : "bg-amber-100 text-amber-900"}`}
       >
         <BellRing className="size-4" aria-hidden />
-        {ETIQUETA[estado]}
+        {ocupado ? "Un momento…" : ETIQUETA[estado]}
       </button>
+      {activo && (
+        <button type="button" onClick={probar} disabled={ocupado} className="inline-flex h-11 items-center rounded-full bg-stone-100 px-4 text-sm font-medium text-stone-700 disabled:opacity-60">
+          Probar aviso
+        </button>
+      )}
+      {prueba && (
+        <p role="status" className="w-full rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+          {prueba}
+        </p>
+      )}
       {estado === "bloqueado" && (
         <p className="w-full rounded-xl bg-stone-100 px-4 py-3 text-sm text-stone-700">
           Las notificaciones están bloqueadas para este sitio. Habilitalas en la configuración del navegador.

@@ -37,7 +37,7 @@ identifica por su `slug` (`/{slug}`).
   El cliente no puede cancelar (decisión diferida del plan).
 - Fase 5b hecha: PWA del panel (manifest en `/panel.webmanifest`, fuera de `/admin` para que se lea sin cookie, y
   enlazado solo desde `src/app/admin/layout.tsx`; íconos en `public/panel/`) y push con `web-push`
-  (`modulos/notificaciones`). Service worker `public/sw.js` con scope `/admin/`, sin caché. El aviso sale con
+  (`modulos/notificaciones`). Service worker `public/sw.js` con scope `/admin` (sin barra: con `/admin/` la pantalla de pedidos quedaba afuera), sin caché. El aviso sale con
   `after()` en `POST /orders`; las suscripciones 404/410 se borran; al salir del panel se da de baja el navegador.
   Claves `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` (sensible) y `VAPID_SUBJECT` en `.env` y en Vercel (Production y
   Preview). Sin claves, el botón "Activar avisos" no aparece. En iPhone el push solo anda con la PWA instalada.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { Baja, mensajePedidoNuevo, Suscripcion } from "@/modulos/notificaciones";
+import { Baja, mensajePedidoNuevo, mensajePrueba, Suscripcion } from "@/modulos/notificaciones";
 
 describe("mensaje del aviso push", () => {
   it("lleva código, entrega, total y nombre; nunca teléfono ni dirección", () => {
@@ -30,4 +30,8 @@ describe("esquema de la suscripción", () => {
     expect(Suscripcion.safeParse({ ...valida, keys: { p256dh: "", auth: "x" } }).success).toBe(false);
     expect(Baja.safeParse({ endpoint: "ftp://x" }).success).toBe(false);
   });
+});
+
+it("el aviso de prueba abre el panel", () => {
+  expect(mensajePrueba()).toMatchObject({ tag: "prueba", url: "/admin" });
 });

@@ -1,5 +1,5 @@
 /*
- * Service worker del panel (scope /admin/). Solo muestra los avisos push y abre el panel al tocarlos.
+ * Service worker del panel (scope /admin). Solo muestra los avisos push y abre el panel al tocarlos.
  * No guarda nada en caché a propósito: el panel siempre tiene que mostrar los pedidos del momento.
  */
 
