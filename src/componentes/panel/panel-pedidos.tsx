@@ -9,6 +9,7 @@ import { ETIQUETA_ACCION, ETIQUETA_ESTADO, siguienteEstado, type EstadoPedido } 
 import type { PedidoPanel } from "@/modulos/pedidos";
 import { activarSonido, sonidoActivo } from "./alerta-sonido";
 import { ErrorApi, llamarApi } from "./api";
+import { BotonAvisos } from "./boton-avisos";
 import { usePedidos } from "./use-pedidos";
 
 const SECCIONES: { estado: EstadoPedido; titulo: string }[] = [
@@ -24,7 +25,7 @@ const hora = (iso: string) => new Date(iso).toLocaleTimeString("es-AR", { hour: 
 const minutosDesde = (iso: string, ahora: number) => Math.max(0, Math.floor((ahora - new Date(iso).getTime()) / 60_000));
 
 /** Pantalla de pedidos del panel (RF-022 a RF-029, sección 10 del plan). */
-export function PanelPedidos() {
+export function PanelPedidos({ clavePush }: { clavePush: string | null }) {
   const { pedidos, resumen, config, ultimaActualizacion, sinConexion, actualizarPedido, consultar } = usePedidos();
   const hidratado = useHidratado();
   const [sonido, setSonido] = useState(false);
@@ -81,6 +82,7 @@ export function PanelPedidos() {
           {sonido && sonidoActivo() ? <Bell className="size-4" aria-hidden /> : <BellOff className="size-4" aria-hidden />}
           {sonido && sonidoActivo() ? "Sonido activado" : "Activar sonido"}
         </button>
+        <BotonAvisos clavePublica={clavePush} />
       </div>
 
       {!config.acceptingOrders && (

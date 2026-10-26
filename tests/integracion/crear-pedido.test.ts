@@ -80,7 +80,7 @@ describe.skipIf(!hayBase)("crear pedido (integración)", () => {
     const datos = pedido();
     const primero = await crear(datos);
     const segundo = await crear(datos);
-    expect(segundo).toEqual({ pedido: primero.pedido, repetido: true });
+    expect(segundo).toEqual({ pedido: primero.pedido, repetido: true, businessId: primero.businessId });
 
     const paralelo = pedido();
     const [a, b] = await Promise.all([crear(paralelo), crear(paralelo)]);

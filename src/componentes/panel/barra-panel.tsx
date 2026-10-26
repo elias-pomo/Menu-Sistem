@@ -4,6 +4,7 @@ import { ClipboardList, ExternalLink, LogOut, UtensilsCrossed } from "lucide-rea
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { llamarApi } from "./api";
+import { desactivarAvisos } from "./avisos-push";
 
 const SECCIONES = [
   { href: "/admin", nombre: "Pedidos", icono: ClipboardList, exacta: true },
@@ -19,6 +20,8 @@ export function BarraPanel({ negocio, slug, usuario }: { negocio: string; slug: 
   const router = useRouter();
 
   async function salir() {
+    // Un dispositivo compartido deja de recibir avisos de este usuario al salir.
+    await desactivarAvisos();
     await llamarApi("POST", "/api/v1/admin/auth/logout", {}).catch(() => {});
     router.replace("/admin/ingresar");
     router.refresh();

@@ -64,7 +64,7 @@ export async function crearPedido(params: {
   datos: PedidoNuevoDatos;
   ip: string | null;
   ahora?: Date;
-}): Promise<{ pedido: PedidoCreado; repetido: boolean }> {
+}): Promise<{ pedido: PedidoCreado; repetido: boolean; businessId: NegocioId }> {
   const ahora = params.ahora ?? new Date();
   const { datos } = params;
   const negocio = await obtenerNegocioPorSlug(params.slug);
@@ -73,7 +73,7 @@ export async function crearPedido(params: {
 
   // RF-014: el mismo envío (doble toque, reintento) devuelve el mismo pedido.
   const anterior = await pedidoPorSolicitud(businessId, datos.clientRequestId);
-  if (anterior) return { pedido: resumen(anterior), repetido: true };
+  if (anterior) return { pedido: resumen(anterior), repetido: true, businessId };
 
   if (!estadoApertura(negocio, negocio.openingHours, ahora).abierto) {
     throw new AppError("NOT_ACCEPTING_ORDERS", negocio.acceptingOrders ? "El local está cerrado en este horario." : (negocio.pauseMessage ?? "El local pausó los pedidos por un rato."));
@@ -153,12 +153,12 @@ export async function crearPedido(params: {
         }),
       );
       if (claveIp) await registrarEventos([claveIp], ahora);
-      return { pedido: resumen(pedido), repetido: false };
+      return { pedido: resumen(pedido), repetido: false, businessId };
     } catch (error) {
       if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== "P2002") throw error;
       // Dos envíos iguales en paralelo: el otro ya lo creó.
       const ganador = await pedidoPorSolicitud(businessId, datos.clientRequestId);
-      if (ganador) return { pedido: resumen(ganador), repetido: true };
+      if (ganador) return { pedido: resumen(ganador), repetido: true, businessId };
       // Código corto repetido en el día: se prueba con otro.
       if (intento >= INTENTOS_CODIGO) throw error;
     }

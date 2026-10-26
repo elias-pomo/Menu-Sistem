@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { PanelPedidos } from "@/componentes/panel/panel-pedidos";
 import { sesionDePagina } from "@/modulos/autenticacion";
+import { clavePublicaPush } from "@/modulos/notificaciones";
 
 export const metadata: Metadata = { title: "Pedidos" };
 
@@ -16,5 +17,5 @@ export default function PaginaPedidos() {
 
 async function Contenido() {
   await sesionDePagina();
-  return <PanelPedidos />;
+  return <PanelPedidos clavePush={clavePublicaPush()} />;
 }
