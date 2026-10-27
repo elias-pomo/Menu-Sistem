@@ -25,3 +25,14 @@ export function generarCodigoCorto(): string {
 }
 
 export const FORMATO_TOKEN_PUBLICO = /^[A-Za-z0-9_-]{22}$/;
+
+const ALFABETO_TEMPORAL = "23456789abcdefghjkmnpqrstuvwxyz";
+
+/**
+ * Contraseña temporal para un usuario nuevo: 3 grupos de 4 ("k7p2-x9mf-3qhr"), sin letras ni números
+ * que se confundan, para dictarla o copiarla al celular. Unos 59 bits de azar.
+ */
+export function generarContrasenaTemporal(): string {
+  const grupo = () => Array.from({ length: 4 }, () => ALFABETO_TEMPORAL[randomInt(ALFABETO_TEMPORAL.length)]).join("");
+  return `${grupo()}-${grupo()}-${grupo()}`;
+}

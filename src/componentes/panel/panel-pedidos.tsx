@@ -10,6 +10,7 @@ import type { PedidoPanel } from "@/modulos/pedidos";
 import { activarSonido, sonidoActivo } from "./alerta-sonido";
 import { ErrorApi, llamarApi } from "./api";
 import { BotonAvisos } from "./boton-avisos";
+import { PausaPedidos } from "./pausa-pedidos";
 import { usePedidos } from "./use-pedidos";
 
 const SECCIONES: { estado: EstadoPedido; titulo: string }[] = [
@@ -83,11 +84,8 @@ export function PanelPedidos({ clavePush }: { clavePush: string | null }) {
           {sonido && sonidoActivo() ? "Sonido activado" : "Activar sonido"}
         </button>
         <BotonAvisos clavePublica={clavePush} />
+        <PausaPedidos aceptando={config.acceptingOrders} onCambio={() => consultar()} />
       </div>
-
-      {!config.acceptingOrders && (
-        <p className="mt-3 rounded-xl bg-amber-50 px-4 py-3 text-sm text-amber-900">Los pedidos están pausados: el menú no acepta pedidos nuevos.</p>
-      )}
       {sinConexion && (
         <p role="alert" className="mt-3 flex items-center gap-2 rounded-xl bg-yellow-100 px-4 py-3 text-sm text-yellow-900">
           <WifiOff className="size-4 shrink-0" aria-hidden />

@@ -41,3 +41,5 @@ export async function registrarAuditoria(cliente: Db | Tx, accion: AccionAuditad
     },
   });
 }
+
+export * from "./historial";

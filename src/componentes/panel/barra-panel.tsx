@@ -1,6 +1,6 @@
 "use client";
 
-import { ClipboardList, ExternalLink, LogOut, UtensilsCrossed } from "lucide-react";
+import { ClipboardList, ExternalLink, LogOut, Settings, UtensilsCrossed } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { llamarApi } from "./api";
@@ -9,6 +9,7 @@ import { desactivarAvisos } from "./avisos-push";
 const SECCIONES = [
   { href: "/admin", nombre: "Pedidos", icono: ClipboardList, exacta: true },
   { href: "/admin/menu", nombre: "Menú", icono: UtensilsCrossed, exacta: false },
+  { href: "/admin/ajustes", nombre: "Ajustes", icono: Settings, exacta: false },
 ];
 
 const ITEM =

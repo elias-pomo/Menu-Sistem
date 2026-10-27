@@ -41,6 +41,14 @@ identifica por su `slug` (`/{slug}`).
   `after()` en `POST /orders`; las suscripciones 404/410 se borran; al salir del panel se da de baja el navegador.
   Claves `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` (sensible) y `VAPID_SUBJECT` en `.env` y en Vercel (Production y
   Preview). Sin claves, el botón "Activar avisos" no aparece. En iPhone el push solo anda con la PWA instalada.
+  "Probar aviso" (`POST /admin/push/test`) se lo manda al propio usuario; cada envío deja `push_enviado` en los logs.
+- Fase 6b hecha: Ajustes en `/admin/ajustes` (Local, Usuarios, Historial, Mi contraseña).
+  `modulos/ajustes`: `GET/PATCH /admin/settings` por secciones (`datos` y `horarios` MANAGER, `envioYPagos` OWNER;
+  si una sección no está permitida no se guarda ninguna) y `POST /admin/settings/pause` (STAFF, botón en Pedidos).
+  Todo cambio invalida `etiquetaMenu(slug)`. `modulos/usuarios`: alta con contraseña temporal que se muestra una
+  sola vez, cambio de rol, desactivar (cierra sesiones y borra push) y contraseña nueva; RN-20 se verifica dentro de
+  la transacción (`LAST_OWNER`). Historial en `auditoria/historial.ts` (textos en castellano, sin `auth.login`).
+  El personal ve Ajustes en solo lectura y puede cambiar su contraseña.
 - `manejar()` (`lib/http.ts`) llama a `connection()` fuera del try: si no, la señal de prerender de Next se
   registraba como error 500 en el build.
 - Formularios del panel: `method="post"` y botón deshabilitado hasta hidratar (`useHidratado`), para que un envío
