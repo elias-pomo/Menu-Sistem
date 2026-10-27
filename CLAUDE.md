@@ -49,6 +49,13 @@ identifica por su `slug` (`/{slug}`).
   sola vez, cambio de rol, desactivar (cierra sesiones y borra push) y contraseña nueva; RN-20 se verifica dentro de
   la transacción (`LAST_OWNER`). Historial en `auditoria/historial.ts` (textos en castellano, sin `auth.login`).
   El personal ve Ajustes en solo lectura y puede cambiar su contraseña.
+- Fase 7 hecha: WhatsApp con enlaces `wa.me` (`modulos/whatsapp`, archivo puro que usa el panel; no importa
+  `lib/telefono` para no cargar libphonenumber en el navegador). Mensaje por estado (6 estados; pendiente no lleva)
+  con link de seguimiento; el botón dice "Mensaje preparado", nunca "enviado", y `POST /admin/orders/{id}/whatsapp`
+  deja `order.whatsapp_opened` en la auditoría (se ve en el detalle del pedido, no en el Historial). Métricas en
+  `/admin/metricas` (MANAGER) con `GET /admin/metrics?from=&to=` (`modulos/metricas`): por `business_date` y estado
+  actual, hasta 366 días, tiempo de preparación solo con 10 o más entregados, nunca "ganancia". En el celular, el
+  encargado y el dueño ven Métricas en la barra y "Ver menú" pasa a Ajustes.
 - `manejar()` (`lib/http.ts`) llama a `connection()` fuera del try: si no, la señal de prerender de Next se
   registraba como error 500 en el build.
 - Formularios del panel: `method="post"` y botón deshabilitado hasta hidratar (`useHidratado`), para que un envío

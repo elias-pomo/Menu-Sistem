@@ -12,7 +12,8 @@ import type { UsuarioSesion } from "@/modulos/autenticacion";
  */
 
 const POR_PAGINA = 50;
-const OCULTAS = ["auth.login"];
+// Los avisos de WhatsApp se ven en el detalle de cada pedido: acá serían ruido.
+const OCULTAS = ["auth.login", "order.whatsapp_opened"];
 
 const ETIQUETAS: Record<string, string> = {
   "auth.password_changed": "Cambió su contraseña",
@@ -31,6 +32,10 @@ const ETIQUETAS: Record<string, string> = {
   "option_group.updated": "Editó el grupo de opciones",
   "option_group.archived": "Archivó el grupo de opciones",
   "image.uploaded": "Subió una foto",
+  "order.marked_paid": "Marcó como cobrado el pedido",
+  "order.unmarked_paid": "Desmarcó como cobrado el pedido",
+  "order.cancelled": "Canceló el pedido",
+  "order.status_reverted": "Volvió atrás el estado del pedido",
   "settings.business_updated": "Editó los datos del local",
   "settings.hours_updated": "Cambió los horarios",
   "settings.delivery_payments_updated": "Cambió envío y pagos",
@@ -55,7 +60,8 @@ export function describirRegistro(r: Registro, nombres: Map<string, string>): st
   const despues = objeto(r.after);
   const etiqueta = ETIQUETAS[r.action] ?? r.action;
   const nombre = (despues.name ?? antes.name ?? (r.entityId && nombres.get(r.entityId))) as string | undefined;
-  let texto = r.action.startsWith("user.") || r.action.startsWith("product.") || r.action.startsWith("category.") || r.action.startsWith("option_group.") ? `${etiqueta}${nombre ? ` ${nombre}` : ""}` : etiqueta;
+  const conNombre = ["user.", "product.", "category.", "option_group.", "order."].some((prefijo) => r.action.startsWith(prefijo));
+  let texto = conNombre ? `${etiqueta}${nombre ? ` ${nombre}` : ""}` : etiqueta;
   if (r.action === "product.price_changed" && typeof antes.priceCents === "number" && typeof despues.priceCents === "number") {
     texto += `: ${formatearPesos(antes.priceCents)} → ${formatearPesos(despues.priceCents)}`;
   }
@@ -96,6 +102,7 @@ export async function listarHistorial(sesion: UsuarioSesion, cursor: string | nu
     db.product.findMany({ where: { businessId, id: { in: deTipo("product") } }, select: { id: true, name: true } }),
     db.category.findMany({ where: { businessId, id: { in: deTipo("category") } }, select: { id: true, name: true } }),
     db.optionGroup.findMany({ where: { businessId, id: { in: deTipo("option_group") } }, select: { id: true, name: true } }),
+    db.order.findMany({ where: { businessId, id: { in: deTipo("order") } }, select: { id: true, publicCode: true } }).then((l) => l.map((o) => ({ id: o.id, name: o.publicCode }))),
   ]);
   const nombres = new Map(listas.flat().map((e) => [e.id, e.name]));
   const ultima = pagina.at(-1);

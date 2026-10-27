@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PedidoPanel } from "@/modulos/pedidos";
 import { sonarPedidoNuevo } from "./alerta-sonido";
+import type { NegocioPanel } from "./boton-whatsapp";
 
 /**
  * Pedidos del panel con consulta periódica (ADR-005): cada 5 s con la pestaña visible y pedidos
@@ -17,7 +18,7 @@ type Respuesta = {
   cursor: string;
   orders: PedidoPanel[];
   resumen: { recibidos: number; entregados: number; cancelados: number; ventasCents: number };
-  config: { pendingAlertMinutes: number; acceptingOrders: boolean };
+  config: { pendingAlertMinutes: number; acceptingOrders: boolean; negocio: NegocioPanel | null };
 };
 
 /**
@@ -33,7 +34,7 @@ function guardarSiEsMasNuevo(mapa: Map<string, PedidoPanel>, pedido: PedidoPanel
 export function usePedidos() {
   const [pedidos, setPedidos] = useState<Map<string, PedidoPanel>>(new Map());
   const [resumen, setResumen] = useState<Respuesta["resumen"] | null>(null);
-  const [config, setConfig] = useState<Respuesta["config"]>({ pendingAlertMinutes: 15, acceptingOrders: true });
+  const [config, setConfig] = useState<Respuesta["config"]>({ pendingAlertMinutes: 15, acceptingOrders: true, negocio: null });
   const [ultimaActualizacion, setUltima] = useState<Date | null>(null);
   const [sinConexion, setSinConexion] = useState(false);
   const cursor = useRef<string | null>(null);

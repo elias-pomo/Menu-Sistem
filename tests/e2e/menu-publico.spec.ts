@@ -58,6 +58,8 @@ test("armar un pedido con opciones, editarlo en el carrito y que sobreviva a rec
   await expect(edicion.getByRole("radio", { name: "Doble" })).toBeChecked();
   await edicion.getByText("Triple").click();
   await edicion.getByRole("button", { name: /Guardar/ }).click();
+  // Mientras el diálogo se cierra, "Triple" todavía se ve adentro: se espera a que desaparezca.
+  await expect(edicion).toBeHidden();
   await expect(page.getByText("Triple")).toBeVisible();
   await expect(page.getByText("Subtotal").locator("..")).toContainText(pesos("$ 35.000"));
 

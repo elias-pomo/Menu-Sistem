@@ -86,6 +86,23 @@ test("pedido de retiro: el cliente lo envía, el local lo confirma con minutos y
   await tarjeta.getByRole("button", { name: "30′" }).click();
   await expect(tarjeta.getByRole("button", { name: "Empezar" })).toBeVisible();
 
+  // WhatsApp (RF-027): el enlace abre el chat del cliente con el mensaje de "confirmado" ya escrito.
+  const whatsapp = tarjeta.getByRole("link", { name: "WhatsApp" });
+  const enlace = new URL((await whatsapp.getAttribute("href"))!);
+  expect(`${enlace.origin}${enlace.pathname}`).toBe(`https://wa.me/549381556${sufijo}`);
+  const texto = enlace.searchParams.get("text")!;
+  expect(texto).toContain(`¡Hola Ana! Confirmamos tu pedido ${codigo}`);
+  expect(texto).toContain("unos 30 minutos");
+  expect(texto).toMatch(/\/la-esquina\/pedido\/[A-Za-z0-9_-]{22}$/);
+  // El chat se abre en otra pestaña: se intercepta para no salir a internet.
+  await local.context().route("https://wa.me/**", (r) => r.fulfill({ status: 200, body: "ok" }));
+  const [pestana] = await Promise.all([local.context().waitForEvent("page"), whatsapp.click()]);
+  await pestana.close();
+  await expect(tarjeta.getByRole("link", { name: "Mensaje preparado" })).toBeVisible();
+  await tarjeta.getByText(`Ana ${sufijo}`).click();
+  await expect(local.getByRole("dialog").getByText(/Se abrió WhatsApp \(confirmado\)/)).toBeVisible();
+  await local.getByRole("dialog").getByRole("button", { name: "Cerrar" }).click();
+
   // El cliente ve el cambio en el seguimiento (se refresca cada 15 s).
   await expect(page.getByRole("status")).toHaveText("El local confirmó tu pedido. Tiempo estimado: 30 min.", { timeout: 20_000 });
 

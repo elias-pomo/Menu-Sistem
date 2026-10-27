@@ -10,6 +10,7 @@ import type { PedidoPanel } from "@/modulos/pedidos";
 import { activarSonido, sonidoActivo } from "./alerta-sonido";
 import { ErrorApi, llamarApi } from "./api";
 import { BotonAvisos } from "./boton-avisos";
+import { BotonWhatsapp, type NegocioPanel } from "./boton-whatsapp";
 import { PausaPedidos } from "./pausa-pedidos";
 import { usePedidos } from "./use-pedidos";
 
@@ -137,6 +138,7 @@ export function PanelPedidos({ clavePush }: { clavePush: string | null }) {
                       bloqueado={bloqueado}
                       onAvanzar={(minutos) => avanzar(p, minutos)}
                       onAbrir={() => setAbierto(p.id)}
+                      negocio={config.negocio}
                     />
                   </li>
                 ))}
@@ -171,6 +173,7 @@ export function PanelPedidos({ clavePush }: { clavePush: string | null }) {
           onCerrar={() => setAbierto(null)}
           onAvanzar={(minutos) => avanzar(seleccionado, minutos)}
           onAccion={accion}
+          negocio={config.negocio}
         />
       )}
     </section>
@@ -197,6 +200,7 @@ function TarjetaPedido({
   bloqueado,
   onAvanzar,
   onAbrir,
+  negocio,
 }: {
   pedido: PedidoPanel;
   ahora: number;
@@ -204,6 +208,7 @@ function TarjetaPedido({
   bloqueado: boolean;
   onAvanzar: (minutos?: number) => Promise<void>;
   onAbrir: () => void;
+  negocio: NegocioPanel | null;
 }) {
   const [eligiendo, setEligiendo] = useState(false);
   const [enviando, setEnviando] = useState(false);
@@ -268,6 +273,11 @@ function TarjetaPedido({
             {enviando ? "…" : ETIQUETA_ACCION[destino]}
           </button>
         ))}
+      {negocio && !eligiendo && (
+        <div className="mt-2 flex">
+          <BotonWhatsapp pedido={p} negocio={negocio} />
+        </div>
+      )}
     </article>
   );
 }
@@ -278,14 +288,27 @@ function DetallePedido({
   onCerrar,
   onAvanzar,
   onAccion,
+  negocio,
 }: {
   pedido: PedidoPanel;
   bloqueado: boolean;
   onCerrar: () => void;
   onAvanzar: (minutos?: number) => Promise<void>;
   onAccion: (llamada: () => Promise<{ order: PedidoPanel }>) => Promise<void>;
+  negocio: NegocioPanel | null;
 }) {
   const [cancelando, setCancelando] = useState(false);
+  // Avisos de WhatsApp ya abiertos para este pedido: vienen del detalle, no del polling.
+  const [whatsapp, setWhatsapp] = useState<{ at: string; status: string }[]>([]);
+  useEffect(() => {
+    let vigente = true;
+    llamarApi<{ order: { whatsapp: { at: string; status: string }[] } }>("GET", `/api/v1/admin/orders/${p.id}`)
+      .then((r) => vigente && setWhatsapp(r.order.whatsapp))
+      .catch(() => {});
+    return () => {
+      vigente = false;
+    };
+  }, [p.id]);
   const [motivo, setMotivo] = useState<MotivoCancelacion | "">("");
   const [nota, setNota] = useState("");
   const terminado = p.status === "DELIVERED" || p.status === "CANCELLED";
@@ -312,6 +335,11 @@ function DetallePedido({
         </div>
 
         <section className="mt-4 rounded-2xl bg-white p-4 text-sm">
+          {negocio && (
+            <div className="float-right">
+              <BotonWhatsapp pedido={p} negocio={negocio} onAbierto={(at) => setWhatsapp((w) => [...w, { at, status: p.status }])} />
+            </div>
+          )}
           <p className="font-semibold">{p.customerName ?? "Datos anonimizados"}</p>
           {p.customerPhone && (
             <a href={`tel:${p.customerPhone}`} className="text-primary underline">
@@ -388,6 +416,15 @@ function DetallePedido({
             ))}
           </ol>
           {p.cancelNote && <p className="mt-1">Nota: {p.cancelNote}</p>}
+          {whatsapp.length > 0 && (
+            <ul className="mt-1 space-y-1 text-muted">
+              {whatsapp.map((w) => (
+                <li key={w.at}>
+                  {hora(w.at)} · Se abrió WhatsApp{w.status ? ` (${ETIQUETA_ESTADO[w.status as EstadoPedido]?.toLowerCase() ?? w.status})` : ""}
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
 
         {!terminado && (

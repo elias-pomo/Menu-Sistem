@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { ExternalLink, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useHidratado } from "@/componentes/use-hidratado";
@@ -15,6 +15,7 @@ import { SubirFoto } from "./subir-foto";
  */
 
 export type AjustesEditables = {
+  slug: string;
   name: string;
   address: string | null;
   whatsappE164: string | null;
@@ -128,6 +129,10 @@ function Interruptor({ checked, onChange, children, detalle }: { checked: boolea
 export function AjustesNegocio({ ajustes }: { ajustes: AjustesEditables }) {
   return (
     <div className="flex flex-col gap-5">
+      <a href={`/${ajustes.slug}`} target="_blank" rel="noreferrer" className="inline-flex h-11 items-center gap-2 self-start rounded-full bg-stone-100 px-4 text-sm font-medium text-stone-700">
+        <ExternalLink className="size-4" aria-hidden />
+        Ver el menú como cliente
+      </a>
       <SeccionDatos ajustes={ajustes} />
       <SeccionHorarios ajustes={ajustes} />
       <SeccionEnvioYPagos ajustes={ajustes} />

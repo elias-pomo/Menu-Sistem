@@ -25,6 +25,8 @@ export function pedidoParaPanel(p: PedidoConDetalle) {
   return {
     id: p.id,
     code: p.publicCode,
+    // Para el link de seguimiento del mensaje de WhatsApp; solo lo ve el personal del local.
+    publicToken: p.publicToken,
     status: p.status,
     fulfillment: p.fulfillment,
     customerName: p.customerName,
@@ -95,7 +97,12 @@ export async function listarPedidosPanel(sesion: UsuarioSesion, desde: Date | nu
       cancelados: contar("CANCELLED"),
       ventasCents: entregados?._sum.totalCents ?? 0,
     },
-    config: { pendingAlertMinutes: negocio.pendingAlertMinutes, acceptingOrders: negocio.acceptingOrders },
+    config: {
+      pendingAlertMinutes: negocio.pendingAlertMinutes,
+      acceptingOrders: negocio.acceptingOrders,
+      // Datos para armar los mensajes de WhatsApp en el panel.
+      negocio: { slug: negocio.slug, name: negocio.name, address: negocio.address, transferAlias: negocio.transferAlias, transferHolder: negocio.transferHolder },
+    },
   };
 }
 
@@ -103,7 +110,35 @@ export async function obtenerPedidoPanel(sesion: UsuarioSesion, orderId: string)
   if (!puede(sesion.role, "pedidos.ver")) throw new AppError("FORBIDDEN", "No tenés permiso para hacer esto.");
   const pedido = esUuid(orderId) ? await db.order.findFirst({ where: { id: orderId, businessId: sesion.businessId }, include: incluir }) : null;
   if (!pedido) throw noEncontrado("No encontramos este pedido.");
-  return pedidoParaPanel(pedido);
+  const whatsapp = await db.auditLog.findMany({
+    where: { businessId: sesion.businessId, entityType: "order", entityId: pedido.id, action: "order.whatsapp_opened" },
+    orderBy: { createdAt: "asc" },
+    select: { createdAt: true, after: true },
+  });
+  return {
+    ...pedidoParaPanel(pedido),
+    whatsapp: whatsapp.map((w) => ({ at: w.createdAt.toISOString(), status: String((w.after as { status?: string } | null)?.status ?? "") })),
+  };
+}
+
+/**
+ * El personal abrió WhatsApp con el mensaje preparado (sección 22). Se registra que se abrió, nunca
+ * que se envió: el sistema no lo puede saber.
+ */
+export async function registrarWhatsapp(sesion: UsuarioSesion, orderId: string) {
+  if (!puede(sesion.role, "pedidos.ver")) throw new AppError("FORBIDDEN", "No tenés permiso para hacer esto.");
+  const pedido = esUuid(orderId) ? await db.order.findFirst({ where: { id: orderId, businessId: sesion.businessId }, select: { id: true, publicCode: true, status: true } }) : null;
+  if (!pedido) throw noEncontrado("No encontramos este pedido.");
+  const at = new Date();
+  await registrarAuditoria(db, {
+    businessId: sesion.businessId,
+    userId: sesion.userId,
+    action: "order.whatsapp_opened",
+    entityType: "order",
+    entityId: pedido.id,
+    after: { code: pedido.publicCode, status: pedido.status },
+  });
+  return { at: at.toISOString(), status: pedido.status };
 }
 
 /** Marcar o desmarcar como cobrado (RF-028), con usuario y hora. */
