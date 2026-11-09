@@ -56,6 +56,11 @@ identifica por su `slug` (`/{slug}`).
   `/admin/metricas` (MANAGER) con `GET /admin/metrics?from=&to=` (`modulos/metricas`): por `business_date` y estado
   actual, hasta 366 días, tiempo de preparación solo con 10 o más entregados, nunca "ganancia". En el celular, el
   encargado y el dueño ven Métricas en la barra y "Ver menú" pasa a Ajustes.
+- Fase 8 (QA y seguridad): informe en `docs/fase-8/informe.md`. CSP sin nonce en `next.config.ts` (el nonce rompería
+  el prerender parcial); cualquier origen nuevo de scripts, imágenes o conexiones hay que agregarlo ahí. Fotos del menú
+  con `next/image` (`remotePatterns` del Blob). `tests/e2e/calidad.spec.ts` (axe + violaciones de CSP) y
+  `tests/e2e/ataques.spec.ts` (T1 a T5). Nada de zod en componentes del navegador: Zod prueba `new Function` y la CSP lo
+  reporta (por eso `pedidos/motivos.ts`). `overrides` en `package.json` fuerza el zod del proyecto en `@vercel/cli-config`.
 - `manejar()` (`lib/http.ts`) llama a `connection()` fuera del try: si no, la señal de prerender de Next se
   registraba como error 500 en el build.
 - Formularios del panel: `method="post"` y botón deshabilitado hasta hidratar (`useHidratado`), para que un envío

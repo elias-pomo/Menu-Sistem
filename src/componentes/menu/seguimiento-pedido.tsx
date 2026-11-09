@@ -73,7 +73,7 @@ export function SeguimientoPedido({ slug, token, inicial, color }: { slug: strin
             const hecho = i < actual || pedido.status === "DELIVERED";
             const enCurso = i === actual && pedido.status !== "DELIVERED";
             return (
-              <li key={estado} className={`flex items-center gap-3 ${i > actual ? "text-stone-400" : ""}`} aria-current={enCurso ? "step" : undefined}>
+              <li key={estado} className={`flex items-center gap-3 ${i > actual ? "text-stone-500" : ""}`} aria-current={enCurso ? "step" : undefined}>
                 <span
                   className={`grid size-7 shrink-0 place-items-center rounded-full text-xs font-bold ${hecho ? "bg-[var(--primary)] text-[var(--primary-foreground)]" : enCurso ? "border-2 border-[var(--primary)]" : "border border-stone-300"}`}
                 >

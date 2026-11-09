@@ -75,5 +75,10 @@ export async function leerCuerpo<T extends z.ZodType>(request: Request, esquema:
 
 /** IP del visitante según el proxy de Vercel. */
 export function ipDe(request: Request): string | null {
-  return request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || null;
+  return ipDeCabeceras(request.headers);
+}
+
+/** Igual que `ipDe`, para páginas (con `headers()` de Next). */
+export function ipDeCabeceras(cabeceras: Headers): string | null {
+  return cabeceras.get("x-forwarded-for")?.split(",")[0]?.trim() || cabeceras.get("x-real-ip") || null;
 }

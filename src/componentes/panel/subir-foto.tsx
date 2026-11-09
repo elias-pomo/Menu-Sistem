@@ -54,7 +54,7 @@ export function SubirFoto({ url, onCambio }: { url: string | null; onCambio: (ur
         // eslint-disable-next-line @next/next/no-img-element -- vista previa de la foto subida
         <img src={url} alt="Foto del producto" className="size-24 rounded-2xl object-cover" />
       ) : (
-        <div className="grid size-24 place-items-center rounded-2xl border border-dashed border-stone-300 text-stone-400">
+        <div className="grid size-24 place-items-center rounded-2xl border border-dashed border-stone-300 text-stone-500">
           <ImagePlus className="size-7" aria-hidden />
         </div>
       )}

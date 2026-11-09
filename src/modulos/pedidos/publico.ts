@@ -23,6 +23,8 @@ export const LIMITES_PEDIDOS = {
   pendientesPorCelular: 2,
   /** Sección 15: creación de pedidos por IP. */
   porIpPorMinuto: 10,
+  /** T4: seguimientos con token inexistente por IP y por minuto (los aciertos no cuentan). */
+  fallosSeguimientoPorIpPorMinuto: 30,
 };
 
 const INTENTOS_CODIGO = 5;
@@ -167,9 +169,23 @@ export async function crearPedido(params: {
 
 /**
  * Seguimiento público con el token (RF-017). Sin teléfono ni dirección: solo el barrio si es
- * delivery. Un token inexistente, de otro negocio o mal escrito da el mismo 404.
+ * delivery. Un token inexistente, de otro negocio o mal escrito da el mismo 404 (null).
+ *
+ * T4 (enumerar tokens): solo se cuentan los fallos, así el refresco cada 15 s de un pedido real no
+ * suma consultas. Pasado el tope por IP, los fallos responden 429.
  */
-export async function obtenerSeguimiento(slug: string, token: string) {
+export async function obtenerSeguimiento(slug: string, token: string, ip: string | null, ahora = new Date()) {
+  const seguimiento = await buscarSeguimiento(slug, token);
+  if (seguimiento || !ip) return seguimiento;
+  const clave = `seguimiento-ip:${ip}`;
+  await registrarEventos([clave], ahora);
+  if (await superaLimite([{ key: clave, limit: LIMITES_PEDIDOS.fallosSeguimientoPorIpPorMinuto + 1, windowMin: 1 }], ahora)) {
+    throw new AppError("RATE_LIMITED", "Demasiadas consultas seguidas. Esperá un minuto y probá de nuevo.");
+  }
+  return null;
+}
+
+async function buscarSeguimiento(slug: string, token: string) {
   if (!FORMATO_TOKEN_PUBLICO.test(token)) return null;
   const pedido = await db.order.findUnique({
     where: { publicToken: token },
@@ -209,4 +225,4 @@ export async function obtenerSeguimiento(slug: string, token: string) {
   };
 }
 
-export type Seguimiento = NonNullable<Awaited<ReturnType<typeof obtenerSeguimiento>>>;
+export type Seguimiento = NonNullable<Awaited<ReturnType<typeof buscarSeguimiento>>>;

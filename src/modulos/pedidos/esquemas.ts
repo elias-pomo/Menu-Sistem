@@ -2,6 +2,7 @@ import { z } from "zod";
 import { MAX_CENTAVOS } from "@/lib/dinero";
 import { normalizarCelularAR } from "@/lib/telefono";
 import { LIMITES_PEDIDO } from "./calculo";
+import { MOTIVOS_CANCELACION, type MotivoCancelacion } from "./motivos";
 
 /**
  * Pedido que manda el navegador (sección 15 del plan, RF-009 a RF-014). Archivo puro: lo usa el
@@ -85,17 +86,7 @@ export const PedidoNuevo = z
 
 export type PedidoNuevoDatos = z.infer<typeof PedidoNuevo>;
 
-export const MOTIVOS_CANCELACION = {
-  OUT_OF_STOCK: "Sin stock",
-  OUT_OF_ZONE: "Fuera de zona",
-  CLOSED: "Cerrado",
-  INVALID_DATA: "Datos inválidos",
-  DUPLICATE: "Pedido duplicado",
-  CUSTOMER_REQUEST: "Lo pidió el cliente",
-  OTHER: "Otro",
-} as const;
-
-export type MotivoCancelacion = keyof typeof MOTIVOS_CANCELACION;
+export { MOTIVOS_CANCELACION, type MotivoCancelacion } from "./motivos";
 
 export const Transicion = z
   .object({

@@ -51,6 +51,9 @@ async function panel(browser: Browser): Promise<Page> {
 
 /** Un cliente arma 2 gaseosas (llega al mínimo de $ 5.000) y confirma con retiro. Devuelve el código. */
 async function hacerPedido(page: Page, nombre: string, telefono: string): Promise<string> {
+  // El menú puede estar en caché con los horarios reales: el navegador se pone en un horario abierto
+  // (miércoles 21:00) y el servidor, que usa la hora real, valida contra el "abierto todo el día".
+  await page.clock.setFixedTime(new Date("2026-10-21T21:00:00-03:00"));
   await page.goto("/la-esquina");
   await page.evaluate(() => localStorage.clear());
   await page.reload();

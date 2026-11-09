@@ -316,6 +316,8 @@ model Order {
   @@unique([businessId, businessDate, publicCode])
   @@index([businessId, createdAt(sort: Desc)])
   @@index([businessId, customerPhone])
+  // Refresco del panel cada 5-10 s: pedidos que cambiaron desde el cursor.
+  @@index([businessId, updatedAt])
   @@map("customer_order")
 }
 
@@ -396,5 +398,7 @@ model AuditLog {
   business Business @relation(fields: [businessId], references: [id], onDelete: Restrict)
 
   @@index([businessId, createdAt(sort: Desc)])
+  // Registros de una entidad (por ejemplo, los WhatsApp abiertos de un pedido).
+  @@index([businessId, entityType, entityId])
   @@map("audit_log")
 }

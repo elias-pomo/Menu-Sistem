@@ -1,6 +1,7 @@
 "use client";
 
 import { MapPin, Plus, ShoppingBag } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useState, type CSSProperties } from "react";
 import { textoSobre } from "@/lib/color";
@@ -42,8 +43,7 @@ export function MenuNegocio({ menu }: { menu: MenuPublico }) {
       <header className="mx-auto max-w-2xl px-4 pb-4 pt-[max(1.5rem,env(safe-area-inset-top))]">
         <div className="flex items-center gap-3">
           {negocio.logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element -- logo subido por el negocio, sin dominio fijo
-            <img src={negocio.logoUrl} alt="" className="size-14 rounded-2xl object-cover" />
+            <Image src={negocio.logoUrl} alt="" width={56} height={56} preload className="size-14 rounded-2xl object-cover" />
           ) : (
             <div aria-hidden className="grid size-14 shrink-0 place-items-center rounded-2xl bg-[var(--primary)] text-2xl font-bold text-[var(--primary-foreground)]">
               {negocio.name.charAt(0)}
@@ -147,7 +147,7 @@ function TarjetaProducto({ producto, aceptaPedidos, onElegir }: { producto: Prod
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="font-semibold">{producto.name}</h3>
           {producto.tags.map((t) => (
-            <span key={t} className="rounded-full bg-[var(--primary)]/10 px-2 py-0.5 text-xs font-medium text-[var(--primary)]">
+            <span key={t} className="rounded-full bg-[var(--primary)]/10 px-2 py-0.5 text-xs font-medium text-stone-800">
               {t}
             </span>
           ))}
@@ -159,32 +159,34 @@ function TarjetaProducto({ producto, aceptaPedidos, onElegir }: { producto: Prod
         </p>
       </div>
       {producto.imageUrl && (
-        // eslint-disable-next-line @next/next/no-img-element -- fotos ya optimizadas al subir (WebP, ≤ 1600 px)
-        <img src={producto.imageUrl} alt="" loading="lazy" className="size-24 shrink-0 rounded-2xl object-cover" />
+        // Vercel la achica al tamaño de la tarjeta: la foto original puede tener hasta 1600 px.
+        <Image src={producto.imageUrl} alt="" width={96} height={96} className="size-24 shrink-0 rounded-2xl object-cover" />
       )}
       {producto.isSoldOut ? (
         <span className="self-center rounded-full bg-stone-100 px-3 py-1 text-sm text-stone-600">Agotado</span>
       ) : (
         pedible && (
-          <span aria-hidden className="grid size-11 shrink-0 place-items-center self-center rounded-full bg-[var(--primary)] text-[var(--primary-foreground)]">
-            <Plus className="size-5" />
-          </span>
+          // El botón es el "+", pero su área cubre toda la tarjeta (after:inset-0): el nombre accesible
+          // queda corto ("Agregar X") y el texto de la tarjeta se sigue leyendo como texto.
+          <button
+            type="button"
+            onClick={onElegir}
+            aria-label={`Agregar ${producto.name}`}
+            className="grid size-11 shrink-0 place-items-center self-center rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] after:absolute after:inset-0 after:rounded-2xl after:content-['']"
+          >
+            <Plus aria-hidden className="size-5" />
+          </button>
         )
       )}
     </>
   );
 
   if (!pedible) {
-    return <div className={`flex gap-3 rounded-2xl border border-stone-200 bg-white p-4 ${producto.isSoldOut ? "opacity-60" : ""}`}>{contenido}</div>;
+    return <div className={`flex gap-3 rounded-2xl border border-stone-200 p-4 ${producto.isSoldOut ? "bg-stone-50 [&_img]:grayscale" : "bg-white"}`}>{contenido}</div>;
   }
   return (
-    <button
-      type="button"
-      onClick={onElegir}
-      aria-label={`Agregar ${producto.name}`}
-      className="flex w-full gap-3 rounded-2xl border border-stone-200 bg-white p-4 text-left transition-colors hover:border-[var(--primary)] active:bg-stone-50"
-    >
+    <div className="relative flex gap-3 rounded-2xl border border-stone-200 bg-white p-4 transition-colors has-[button:hover]:border-[var(--primary)] has-[button:active]:bg-stone-50 has-[button:focus-visible]:ring-2 has-[button:focus-visible]:ring-[var(--primary)]">
       {contenido}
-    </button>
+    </div>
   );
 }

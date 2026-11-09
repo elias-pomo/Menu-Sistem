@@ -72,7 +72,7 @@ export function AdminMenu({ categorias, grupos, puedeEditar }: { categorias: Cat
         {categorias.map((categoria, ci) => (
           <article key={categoria.id} className="rounded-2xl border border-stone-200 bg-white">
             <header className="flex flex-wrap items-center gap-1 border-b border-stone-100 px-4 py-2">
-              <h2 className={`mr-auto py-2 font-bold ${categoria.isActive ? "" : "text-stone-400 line-through"}`}>{categoria.name}</h2>
+              <h2 className={`mr-auto py-2 font-bold ${categoria.isActive ? "" : "text-stone-500 line-through"}`}>{categoria.name}</h2>
               {puedeEditar && (
                 <>
                   <BotonIcono etiqueta={`Subir ${categoria.name}`} disabled={ci === 0} onClick={() => accion(() => llamarApi("POST", "/api/v1/admin/categories/reorder", { ids: mover(categorias.map((c) => c.id), ci, -1) }))}>
@@ -121,7 +121,7 @@ export function AdminMenu({ categorias, grupos, puedeEditar }: { categorias: Cat
                 {categoria.products.map((producto, pi) => (
                   <li key={producto.id} className="flex flex-wrap items-center gap-2 px-4 py-2">
                     <div className="min-w-0 flex-1 py-1">
-                      <p className={`font-medium ${producto.isActive ? "" : "text-stone-400"}`}>
+                      <p className={`font-medium ${producto.isActive ? "" : "text-stone-500"}`}>
                         {producto.name}
                         {!producto.isActive && <span className="ml-2 text-xs font-normal">(oculto)</span>}
                       </p>

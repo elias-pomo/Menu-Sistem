@@ -162,16 +162,29 @@ describe.skipIf(!hayBase)("crear pedido (integración)", () => {
   it("el seguimiento no muestra teléfono ni dirección y no se puede ver desde otro negocio (RF-017)", async () => {
     const delivery = pedido({ fulfillment: "DELIVERY", address: { street: "Calle Falsa", number: "742", neighborhood: "Centro", reference: "portón negro" } });
     const { pedido: creado } = await crear(delivery);
-    const seguimiento = await obtenerSeguimiento("la-esquina", creado.token);
+    const seguimiento = await obtenerSeguimiento("la-esquina", creado.token, null);
     expect(seguimiento).toMatchObject({ code: creado.code, status: "PENDING", barrio: "Centro", mensaje: "Pedido enviado. Falta que el local lo confirme." });
     const texto = JSON.stringify(seguimiento);
     expect(texto).not.toContain(delivery.customer.phone);
     expect(texto).not.toContain("Calle Falsa");
     expect(texto).not.toContain("portón");
-    expect(await obtenerSeguimiento("don-pepe", creado.token)).toBeNull();
-    expect(await obtenerSeguimiento("la-esquina", `${creado.token.slice(0, 21)}x`)).toBeNull();
-    expect(await obtenerSeguimiento("la-esquina", "corto")).toBeNull();
+    expect(await obtenerSeguimiento("don-pepe", creado.token, null)).toBeNull();
+    expect(await obtenerSeguimiento("la-esquina", `${creado.token.slice(0, 21)}x`, null)).toBeNull();
+    expect(await obtenerSeguimiento("la-esquina", "corto", null)).toBeNull();
   });
+
+  it("T4: una IP que prueba tokens recibe 429 después de 30 fallos por minuto; los aciertos no cuentan", async () => {
+    const ip = `203.0.113.${Math.floor(Math.random() * 250)}`;
+    const clave = `seguimiento-ip:${ip}`;
+    await db.rateLimitHit.deleteMany({ where: { key: clave } });
+    const { pedido: creado } = await crear(pedido());
+    for (let i = 0; i < 40; i++) expect(await obtenerSeguimiento("la-esquina", creado.token, ip)).not.toBeNull();
+    for (let i = 0; i < 30; i++) expect(await obtenerSeguimiento("la-esquina", randomUUID().slice(0, 22).replace(/-/g, "a"), ip)).toBeNull();
+    await expect(obtenerSeguimiento("la-esquina", "A".repeat(22), ip)).rejects.toMatchObject({ code: "RATE_LIMITED" });
+    // Un pedido real se sigue viendo aunque la IP esté frenada.
+    expect(await obtenerSeguimiento("la-esquina", creado.token, ip)).not.toBeNull();
+    await db.rateLimitHit.deleteMany({ where: { key: clave } });
+  }, 60_000);
 
   it("el panel ve el pedido nuevo; con el cursor solo trae lo que cambió; cobrado queda registrado", async () => {
     const staff = await sesionDe("la-esquina", "STAFF");

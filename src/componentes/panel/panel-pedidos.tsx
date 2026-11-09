@@ -4,7 +4,7 @@ import { AlertTriangle, Bell, BellOff, Bike, Clock, Store, WifiOff, X } from "lu
 import { useEffect, useState } from "react";
 import { useHidratado } from "@/componentes/use-hidratado";
 import { formatearPesos } from "@/lib/dinero";
-import { MOTIVOS_CANCELACION, type MotivoCancelacion } from "@/modulos/pedidos/esquemas";
+import { MOTIVOS_CANCELACION, type MotivoCancelacion } from "@/modulos/pedidos/motivos";
 import { ETIQUETA_ACCION, ETIQUETA_ESTADO, siguienteEstado, type EstadoPedido } from "@/modulos/pedidos/estados";
 import type { PedidoPanel } from "@/modulos/pedidos";
 import { activarSonido, sonidoActivo } from "./alerta-sonido";
