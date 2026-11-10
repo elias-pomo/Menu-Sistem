@@ -10,7 +10,9 @@
  */
 import "dotenv/config";
 import { db } from "@/lib/bd";
-import { hashearContrasena, normalizarEmail, problemaConContrasena } from "@/modulos/autenticacion";
+// Directo: el index de autenticación arrastra next/navigation, que no carga fuera de Next.
+import { hashearContrasena, problemaConContrasena } from "@/modulos/autenticacion/contrasenas";
+import { normalizarEmail } from "@/modulos/autenticacion/servicio";
 
 const SLUG = "hawkens-food";
 const pesos = (n: number) => n * 100;

@@ -74,6 +74,10 @@ identifica por su `slug` (`/{slug}`).
   del navegador con `page.clock` (el servidor usa la hora real: `pedido.spec.ts` abre la-esquina todo el día y después
   restaura sus horarios). Después de los e2e, PGlite a veces queda cortando conexiones ("Server has closed the
   connection"): `npx prisma dev stop menu-local` y volver a levantarla con `npm run db:dev`.
+- Demos: `prisma/demos.ts` (`npm run db:demos` / `db:prod:demos`, `-- --reset` para recrearlos) carga 3 locales
+  ficticios en local y producción (`demo-pizzeria`, `demo-resto`, `demo-cafe`) con usuarios
+  `dueno|encargado|personal@<slug>.test` (`DEMO_PASSWORD`) e historial de pedidos. Recorrido de prueba en `docs/demos.md`.
+  Los scripts fuera de Next importan de `autenticacion/contrasenas` directo: el `index.ts` arrastra `next/navigation`.
 - Piloto: **Hawken's Food** (`/hawkens-food`), local ficticio con el nombre de la marca Hawken y su menú real. Fotos
   genéricas (todavía no cargadas). Se carga con `npm run db:piloto` (local) o `npm run db:prod:piloto` (Neon).
 

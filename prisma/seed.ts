@@ -11,7 +11,8 @@ import "dotenv/config";
 import { randomUUID } from "node:crypto";
 import { db } from "@/lib/bd";
 import { generarTokenPublico } from "@/lib/tokens";
-import { hashearContrasena, problemaConContrasena } from "@/modulos/autenticacion";
+// Directo de contrasenas: el index de autenticación arrastra next/navigation, que no carga fuera de Next.
+import { hashearContrasena, problemaConContrasena } from "@/modulos/autenticacion/contrasenas";
 import { cargarProductosParaPedido } from "@/modulos/menu";
 import { fechaDeNegocio, negocioResuelto, type NegocioId } from "@/modulos/negocio";
 import {

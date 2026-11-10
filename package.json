@@ -19,9 +19,11 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "db:piloto": "tsx --conditions=react-server prisma/piloto.ts",
+    "db:demos": "tsx --conditions=react-server prisma/demos.ts",
     "db:prod:migrate": "node --env-file=.env.produccion scripts/prod-guard.mjs && node --env-file=.env.produccion node_modules/prisma/build/index.js migrate deploy",
     "db:prod:status": "node --env-file=.env.produccion scripts/prod-guard.mjs && node --env-file=.env.produccion node_modules/prisma/build/index.js migrate status",
     "db:prod:piloto": "node --env-file=.env.produccion scripts/prod-guard.mjs && node --env-file=.env.produccion node_modules/tsx/dist/cli.mjs --conditions=react-server prisma/piloto.ts",
+    "db:prod:demos": "node --env-file=.env.produccion scripts/prod-guard.mjs && node --env-file=.env.produccion node_modules/tsx/dist/cli.mjs --conditions=react-server prisma/demos.ts",
     "prod:smoke": "node --env-file=.env.produccion scripts/prod-guard.mjs && node --env-file=.env.produccion node_modules/tsx/dist/cli.mjs --conditions=react-server scripts/prod-smoke.ts",
     "start:prod": "node --env-file=.env.produccion node_modules/next/dist/bin/next start",
     "db:preview:migrate": "node --env-file=.env.preview scripts/prod-guard.mjs && node --env-file=.env.preview node_modules/prisma/build/index.js migrate deploy"
