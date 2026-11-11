@@ -27,7 +27,7 @@ test.beforeEach(async ({ page }) => {
 
 test("armar un pedido con opciones, editarlo en el carrito y que sobreviva a recargar", async ({ page }) => {
   await abrirMenu(page);
-  await expect(page.getByText("Abierto: tomando pedidos")).toBeVisible();
+  await expect(page.getByText("Abierto", { exact: true })).toBeVisible();
 
   // Producto con opciones: hoja inferior con el grupo obligatorio ya elegido.
   await page.getByRole("button", { name: "Agregar Cheesse" }).click();
@@ -121,7 +121,8 @@ for (const ancho of ANCHOS) {
             const r = el.getBoundingClientRect();
             return { texto: (el as HTMLElement).innerText || el.getAttribute("aria-label"), alto: r.height, ancho: r.width };
           })
-          .filter((r) => r.alto < 44 || r.ancho < 44),
+          // Medio píxel de tolerancia: el layout con decimales da 43,9999 en botones de 44.
+          .filter((r) => r.alto < 43.5 || r.ancho < 43.5),
       );
       expect(chicos, `${ruta} a ${ancho} px`).toEqual([]);
     }

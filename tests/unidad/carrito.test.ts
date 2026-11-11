@@ -20,6 +20,7 @@ const MENU: MenuPublico = {
     address: null,
     logoUrl: null,
     primaryColor: "#c2410c",
+    menuStyle: "MANTEL",
     whatsappE164: null,
     acceptingOrders: true,
     pauseMessage: null,

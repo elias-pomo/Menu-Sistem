@@ -32,6 +32,7 @@ const seleccion = {
   primaryColor: true,
   showPhotos: true,
   showDescriptions: true,
+  menuStyle: true,
   acceptingOrders: true,
   pauseMessage: true,
   deliveryEnabled: true,
@@ -130,6 +131,7 @@ function prepararDatos(d: DatosNegocioDatos) {
     primaryColor: d.primaryColor.toLowerCase(),
     showPhotos: d.showPhotos,
     showDescriptions: d.showDescriptions,
+    ...(d.menuStyle && { menuStyle: d.menuStyle }),
   };
 }
 

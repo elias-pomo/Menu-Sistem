@@ -38,6 +38,8 @@ async function vigilarCsp(page: Page): Promise<string[]> {
 
 async function revisarAccesibilidad(page: Page, pantalla: string, violacionesCsp: string[]) {
   const antes = violacionesCsp.length;
+  // Las entradas animadas (opacidad) falsean el contraste: se mide cuando terminaron (las infinitas no cuentan).
+  await page.waitForFunction(() => document.getAnimations().every((a) => a.playState !== "running" || a.effect?.getTiming().iterations === Infinity));
   const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"]).analyze();
   const resumen = violations.map((v) => `${pantalla}: ${v.id} (${v.impact}) → ${v.nodes.slice(0, 3).map((n) => `${n.html} ${n.failureSummary ?? ""}`).join(" | ")}`);
   // axe se inyecta con eval: lo que la CSP bloquea mientras corre es de la herramienta, no de la app.

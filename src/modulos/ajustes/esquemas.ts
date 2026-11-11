@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { esColorValido } from "@/lib/color";
 import { MAX_CENTAVOS } from "@/lib/dinero";
+import { ESTILOS_MENU } from "@/modulos/menu/estilos";
 
 /** Validación de la configuración del negocio (RF-034, RF-035). Archivo puro: lo usa también el panel. */
 
@@ -34,6 +35,8 @@ export const DatosNegocio = z
     primaryColor: z.string().refine(esColorValido, "Elegí un color válido."),
     showPhotos: z.boolean(),
     showDescriptions: z.boolean(),
+    // Opcional: si no viene, el estilo no cambia.
+    menuStyle: z.enum(ESTILOS_MENU, { error: "Elegí un estilo." }).optional(),
   })
   .strict();
 export type DatosNegocioDatos = z.infer<typeof DatosNegocio>;

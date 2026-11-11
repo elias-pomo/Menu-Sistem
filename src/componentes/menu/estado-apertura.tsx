@@ -1,6 +1,6 @@
 "use client";
 
-import { estadoApertura, horaLocal, minutosAHora } from "@/modulos/negocio/horarios";
+import { cierreActual, estadoApertura, horaLocal, minutosAHora } from "@/modulos/negocio/horarios";
 import type { NegocioPublico } from "@/modulos/menu/tipos";
 import { useAhora } from "./use-ahora";
 
@@ -29,28 +29,33 @@ export function proximaApertura(negocio: NegocioPublico, ahora: Date): string | 
   return null;
 }
 
+/** "Abierto · cierra a las 00:30", "Cerrado · Abre hoy a las 19:30" o "Pedidos pausados". */
 export function EstadoApertura({ negocio }: { negocio: NegocioPublico }) {
   const estado = useApertura(negocio);
   const ahora = useAhora();
 
-  if (!estado || !ahora) {
-    return <span className="inline-block h-7 w-36 animate-pulse rounded-full bg-stone-200" aria-hidden />;
-  }
+  // Hasta saber la hora (primera hidratación), un espacio del mismo alto: nada salta después.
+  if (!estado || !ahora) return <span className="inline-block h-5 w-40 rounded-full bg-realce" aria-hidden />;
+
   if (estado.abierto) {
+    const cierre = cierreActual(negocio.openingHours, ahora, negocio.timezone);
     return (
-      <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-800">
-        <span className="size-2 rounded-full bg-emerald-600" aria-hidden />
-        Abierto: tomando pedidos
+      <span className="inline-flex items-center gap-2">
+        <span className="relative grid size-2 place-items-center" aria-hidden>
+          <span className="absolute size-2 rounded-full bg-emerald-500 motion-safe:animate-[anillo_2.4s_ease-out_infinite] [--primary:#10b981]" />
+          <span className="size-2 rounded-full bg-emerald-500" />
+        </span>
+        <span className="font-medium text-tinta">Abierto</span>
+        {cierre !== null && <span className="text-tinta-suave">· cierra a las {minutosAHora(cierre)}</span>}
       </span>
     );
   }
-  const texto = estado.motivo === "PAUSADO" ? "Pedidos pausados" : "Cerrado";
   const apertura = estado.motivo === "FUERA_DE_HORARIO" ? proximaApertura(negocio, ahora) : null;
   return (
-    <span className="inline-flex items-center gap-2 rounded-full bg-stone-100 px-3 py-1 text-sm font-medium text-stone-700">
-      <span className="size-2 rounded-full bg-stone-500" aria-hidden />
-      {texto}
-      {apertura && <span className="font-normal">· {apertura}</span>}
+    <span className="inline-flex items-center gap-2">
+      <span className="size-2 rounded-full bg-tinta-suave" aria-hidden />
+      <span className="font-medium text-tinta">{estado.motivo === "PAUSADO" ? "Pedidos pausados" : "Cerrado"}</span>
+      {apertura && <span className="text-tinta-suave">· {apertura}</span>}
     </span>
   );
 }

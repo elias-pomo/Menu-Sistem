@@ -74,6 +74,12 @@ identifica por su `slug` (`/{slug}`).
   del navegador con `page.clock` (el servidor usa la hora real: `pedido.spec.ts` abre la-esquina todo el día y después
   restaura sus horarios). Después de los e2e, PGlite a veces queda cortando conexiones ("Server has closed the
   connection"): `npx prisma dev stop menu-local` y volver a levantarla con `npm run db:dev`.
+- Estilos del menú público (`business.menu_style`: NOCTURNO, MANTEL, MOSTRADOR; `modulos/menu/estilos.ts`, puro): se
+  eligen en Ajustes. Toda pantalla del cliente va dentro de `MarcoMenu` (`componentes/menu/marco.tsx`), que pone
+  `data-estilo`, las fuentes (`fuentes.ts`, next/font sin precarga) y el color. En globals.css: tokens (`bg-lienzo`,
+  `text-tinta`, `text-tinta-suave`, `border-linea`, `bg-acento`, `rounded-tarjeta`, `.titulo`) y variantes `nocturno:`,
+  `mantel:`, `mostrador:`. Animaciones solo con transform y opacidad, curvas `ease-salida` / `ease-hoja`, y
+  `prefers-reduced-motion` las apaga. La hoja de producto anima la salida antes de `dialog.close()` y se cierra arrastrando.
 - Demos: `prisma/demos.ts` (`npm run db:demos` / `db:prod:demos`, `-- --reset` para recrearlos) carga 3 locales
   ficticios en local y producción (`demo-pizzeria`, `demo-resto`, `demo-cafe`) con usuarios
   `dueno|encargado|personal@<slug>.test` (`DEMO_PASSWORD`) e historial de pedidos. Recorrido de prueba en `docs/demos.md`.
@@ -104,7 +110,7 @@ identifica por su `slug` (`/{slug}`).
 - `src/app/api/v1`: rutas finas (validar con Zod, llamar al servicio, responder). Sin reglas de negocio.
 - `src/modulos/*`: reglas de negocio. Un módulo importa de otro por su `index.ts`. Excepción: los archivos
   puros que también usa el navegador (`pedidos/calculo`, `pedidos/estados`, `autenticacion/permisos`,
-  `negocio/horarios`, `negocio/alcance`) se pueden importar directo, porque el `index.ts` arrastra `server-only`.
+  `negocio/horarios`, `negocio/alcance`, `menu/estilos`, `pedidos/motivos`) se pueden importar directo, porque el `index.ts` arrastra `server-only`.
 - **Multi-negocio:** los repositorios exigen un `NegocioId` (tipo con marca, `negocio/alcance.ts`). Solo sale de la
   sesión (`validarSesion`) o del slug resuelto en el servidor (`obtenerNegocioPorSlug`). Nunca del cuerpo de la solicitud.
   Consultas por ID: siempre con `businessId` en el WHERE; si no coincide, 404 (no 403).

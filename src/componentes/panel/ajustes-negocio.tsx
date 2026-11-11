@@ -4,7 +4,9 @@ import { ExternalLink, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useHidratado } from "@/componentes/use-hidratado";
+import { textoSobre } from "@/lib/color";
 import { formatearPesos, pesosACentavos } from "@/lib/dinero";
+import { DESCRIPCION_ESTILO, ESTILOS_MENU, type EstiloMenu } from "@/modulos/menu/estilos";
 import { horaAMinutos, minutosAHora } from "@/modulos/negocio/horarios";
 import { ErrorApi, llamarApi } from "./api";
 import { SubirFoto } from "./subir-foto";
@@ -23,6 +25,7 @@ export type AjustesEditables = {
   primaryColor: string;
   showPhotos: boolean;
   showDescriptions: boolean;
+  menuStyle: EstiloMenu;
   deliveryEnabled: boolean;
   deliveryFeeCents: number;
   minOrderCents: number;
@@ -149,6 +152,7 @@ function SeccionDatos({ ajustes }: { ajustes: AjustesEditables }) {
   const [primaryColor, setPrimaryColor] = useState(ajustes.primaryColor);
   const [showPhotos, setShowPhotos] = useState(ajustes.showPhotos);
   const [showDescriptions, setShowDescriptions] = useState(ajustes.showDescriptions);
+  const [menuStyle, setMenuStyle] = useState(ajustes.menuStyle);
 
   return (
     <Seccion
@@ -158,7 +162,7 @@ function SeccionDatos({ ajustes }: { ajustes: AjustesEditables }) {
       quien="el encargado o el dueño"
       enviando={s.enviando}
       mensaje={s.mensaje}
-      onGuardar={() => s.guardar({ name, address: address || null, whatsapp: whatsapp || null, logoUrl, primaryColor, showPhotos, showDescriptions })}
+      onGuardar={() => s.guardar({ name, address: address || null, whatsapp: whatsapp || null, logoUrl, primaryColor, showPhotos, showDescriptions, menuStyle })}
     >
       <label className="block">
         <span className="font-medium">Nombre</span>
@@ -186,6 +190,23 @@ function SeccionDatos({ ajustes }: { ajustes: AjustesEditables }) {
           ) : <p className="text-sm text-muted">Sin logo</p>}</div>
         {s.error("logoUrl")}
       </div>
+      <fieldset>
+        <legend className="font-medium">Estilo del menú</legend>
+        <div className="mt-2 grid gap-2 sm:grid-cols-3">
+          {ESTILOS_MENU.map((estilo) => (
+            <label
+              key={estilo}
+              className={`flex cursor-pointer flex-col gap-2 rounded-2xl border-2 p-3 has-[:disabled]:cursor-default ${menuStyle === estilo ? "border-primary" : "border-stone-200"}`}
+            >
+              <input type="radio" name="menuStyle" value={estilo} checked={menuStyle === estilo} onChange={() => setMenuStyle(estilo)} className="sr-only" />
+              <MuestraEstilo estilo={estilo} color={primaryColor} />
+              <span className="font-medium">{DESCRIPCION_ESTILO[estilo].nombre}</span>
+              <span className="text-sm text-muted">{DESCRIPCION_ESTILO[estilo].para}</span>
+            </label>
+          ))}
+        </div>
+        {s.error("menuStyle")}
+      </fieldset>
       <label className="flex items-center gap-3">
         <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="h-12 w-16 cursor-pointer rounded-xl border border-stone-300 bg-white p-1" />
         <span>
@@ -201,6 +222,24 @@ function SeccionDatos({ ajustes }: { ajustes: AjustesEditables }) {
         Mostrar descripciones en el menú
       </Interruptor>
     </Seccion>
+  );
+}
+
+/** Miniatura de cada estilo: fondo, tipografía y un renglón de la carta con el color del local. */
+function MuestraEstilo({ estilo, color }: { estilo: EstiloMenu; color: string }) {
+  const fondo = { NOCTURNO: "bg-[#14110f] text-[#f3ece4]", MANTEL: "bg-[#f7f1e6] text-[#2a211b]", MOSTRADOR: "bg-[#fbf3ea] text-[#3b2a20]" }[estilo];
+  return (
+    <span aria-hidden className={`flex h-20 flex-col justify-between rounded-xl p-3 ${fondo}`}>
+      <span className={estilo === "NOCTURNO" ? "font-bold uppercase tracking-tight" : estilo === "MANTEL" ? "font-serif text-lg italic" : "font-semibold"}>
+        {DESCRIPCION_ESTILO[estilo].nombre}
+      </span>
+      <span className="flex items-center gap-2 text-xs">
+        <span className={estilo === "MANTEL" ? "flex-1 border-b border-dotted border-current opacity-40" : "flex-1"} />
+        <span className="rounded-full px-2 py-0.5 font-semibold" style={{ background: color, color: textoSobre(color) }}>
+          $ 9.500
+        </span>
+      </span>
+    </span>
   );
 }
 

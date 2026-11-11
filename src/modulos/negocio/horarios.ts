@@ -34,6 +34,18 @@ export function estaEnHorario(franjas: readonly Franja[], ahora: Date, zonaHorar
   });
 }
 
+/** Cierre de la franja en curso en minutos desde la medianoche, o null si está cerrado. */
+export function cierreActual(franjas: readonly Franja[], ahora: Date, zonaHoraria: string): number | null {
+  const { weekday, minuto } = horaLocal(ahora, zonaHoraria);
+  const ayer = (weekday + 6) % 7;
+  const enCurso = franjas.find((f) => {
+    const cruzaMedianoche = f.closesMin <= f.opensMin;
+    if (f.weekday === weekday) return cruzaMedianoche ? minuto >= f.opensMin : minuto >= f.opensMin && minuto < f.closesMin;
+    return f.weekday === ayer && cruzaMedianoche && minuto < f.closesMin;
+  });
+  return enCurso ? enCurso.closesMin : null;
+}
+
 export function estadoApertura(
   negocio: { acceptingOrders: boolean; timezone: string },
   franjas: readonly Franja[],

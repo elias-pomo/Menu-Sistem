@@ -27,7 +27,7 @@ Hay tres locales ficticios para probar el sistema de punta a punta. Se cargan co
 | Pago | Efectivo y transferencia | Efectivo y transferencia | Efectivo y transferencia |
 | Opciones | Tamaño obligatorio; **media y media: exactamente 2 gustos**, los especiales suman; adicionales (hasta 3); cocción de empanadas; sin ingredientes | Guarnición obligatoria; punto de la carne; salsa con adicional; extras; sin sal, cebolla, ajo o picante | Tamaño y **tipo de leche** con adicional; **facturas: hasta 3 variedades**; porción o **torta entera** (+$ 32.000) |
 | Casos especiales | Agotada: Rúcula y crudo. Oculta: Empanada de verdura. Opciones no disponibles: Rúcula y Palmitos | Agotado: Salmón. Oculto: Menú ejecutivo. Opción no disponible: Vegetales grillados | Agotado: Lemon pie. Oculta: Rosca de Pascua. Opción no disponible: Sacramentos |
-| Aspecto | Rojo oscuro, con descripciones | Verde, con descripciones; aviso de demora a los 10 min | **Amarillo claro**: el texto de los botones pasa a oscuro. **Sin descripciones** |
+| Aspecto | Estilo **Nocturno**, rojo oscuro, con descripciones | Estilo **Mantel**, verde, con descripciones; aviso de demora a los 10 min | Estilo **Mostrador**, **amarillo claro**: el texto de los botones pasa a oscuro. **Sin descripciones** |
 | Platos y bebidas | 23 platos y 6 bebidas | 21 platos y 7 bebidas | 22 productos de desayuno, panadería, pastelería y salado, y 10 bebidas |
 
 ## Recorrido de prueba

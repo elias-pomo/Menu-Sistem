@@ -28,3 +28,157 @@ select,
 textarea {
   font-size: 16px;
 }
+
+/* ─── Menú público ──────────────────────────────────────────────────────────
+ * Tres estilos que elige cada local (MenuStyle). Los componentes usan los tokens semánticos
+ * (bg-lienzo, text-tinta, font-display, rounded-tarjeta) y las variantes nocturno:, mantel:,
+ * mostrador: para lo que cambia de forma. El color de acento es el del local (--primary).
+ */
+@custom-variant nocturno (&:where([data-estilo="NOCTURNO"], [data-estilo="NOCTURNO"] *));
+@custom-variant mantel (&:where([data-estilo="MANTEL"], [data-estilo="MANTEL"] *));
+@custom-variant mostrador (&:where([data-estilo="MOSTRADOR"], [data-estilo="MOSTRADOR"] *));
+
+@theme inline {
+  --color-lienzo: var(--m-lienzo);
+  --color-superficie: var(--m-superficie);
+  --color-realce: var(--m-realce);
+  --color-tinta: var(--m-tinta);
+  --color-tinta-suave: var(--m-tinta-suave);
+  --color-linea: var(--m-linea);
+  --color-acento: var(--primary);
+  --color-sobre-acento: var(--primary-foreground);
+  --font-cuerpo: var(--m-cuerpo);
+  --font-display: var(--m-display);
+  --radius-tarjeta: var(--m-radio);
+  --ease-salida: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-hoja: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+:root {
+  --m-lienzo: var(--background);
+  --m-superficie: #ffffff;
+  --m-realce: #f5f5f4;
+  --m-tinta: var(--foreground);
+  --m-tinta-suave: var(--muted);
+  --m-linea: #e7e5e4;
+  --m-cuerpo: system-ui, sans-serif;
+  --m-display: system-ui, sans-serif;
+  --m-radio: 1rem;
+}
+
+[data-estilo="NOCTURNO"] {
+  --m-lienzo: #110f0d;
+  --m-superficie: #1a1714;
+  --m-realce: #24201c;
+  --m-tinta: #f3ece3;
+  --m-tinta-suave: #a99d90;
+  --m-linea: rgb(243 236 227 / 0.1);
+  --m-cuerpo: var(--fuente-archivo), system-ui, sans-serif;
+  --m-display: var(--fuente-archivo), system-ui, sans-serif;
+  --m-radio: 0.75rem;
+  color-scheme: dark;
+}
+
+[data-estilo="MANTEL"] {
+  --m-lienzo: #f5efe4;
+  --m-superficie: #fbf8f2;
+  --m-realce: #efe7d8;
+  --m-tinta: #231b15;
+  --m-tinta-suave: #6a5b4e;
+  --m-linea: #ddd2c0;
+  --m-cuerpo: var(--fuente-instrument), system-ui, sans-serif;
+  --m-display: var(--fuente-newsreader), Georgia, serif;
+  --m-radio: 0.375rem;
+}
+
+[data-estilo="MOSTRADOR"] {
+  --m-lienzo: #f8f1e8;
+  --m-superficie: #ffffff;
+  --m-realce: #f3e9dc;
+  --m-tinta: #34251c;
+  --m-tinta-suave: #766459;
+  --m-linea: #ece0d1;
+  --m-cuerpo: var(--fuente-instrument), system-ui, sans-serif;
+  --m-display: var(--fuente-young), Georgia, serif;
+  --m-radio: 1.375rem;
+}
+
+/* El rebote del scroll en iOS deja ver el body: que tenga el fondo del estilo. */
+body:has([data-estilo="NOCTURNO"]) {
+  background: #110f0d;
+}
+body:has([data-estilo="MANTEL"]) {
+  background: #f5efe4;
+}
+body:has([data-estilo="MOSTRADOR"]) {
+  background: #f8f1e8;
+}
+
+/* Títulos: cada estilo con su voz. */
+.titulo {
+  font-family: var(--m-display);
+  text-wrap: balance;
+}
+[data-estilo="NOCTURNO"] .titulo {
+  font-variation-settings: "wdth" 70;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.005em;
+  line-height: 0.92;
+}
+[data-estilo="MANTEL"] .titulo {
+  font-weight: 500;
+  letter-spacing: -0.012em;
+  line-height: 1.05;
+}
+[data-estilo="MOSTRADOR"] .titulo {
+  letter-spacing: -0.01em;
+  line-height: 1.08;
+}
+
+/* Puntos guía entre el nombre y el precio, como en una carta impresa (Mantel). */
+.guia {
+  flex: 1;
+  min-width: 1.5rem;
+  margin: 0 0.5rem 0.3em;
+  border-bottom: 1.5px dotted color-mix(in srgb, var(--m-tinta) 35%, transparent);
+}
+
+/* Toques: respuesta inmediata al presionar, sin hover pegado en pantallas táctiles. */
+.presionable {
+  transition: transform 160ms var(--ease-salida), background-color 160ms ease, border-color 160ms ease;
+}
+.presionable:active {
+  transform: scale(0.97);
+}
+
+@keyframes entrar-suave {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes latido {
+  40% {
+    transform: scale(1.22);
+  }
+}
+@keyframes anillo {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--primary) 45%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 10px color-mix(in srgb, var(--primary) 0%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-estilo] *,
+  [data-estilo] *::before,
+  [data-estilo] *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -41,6 +41,7 @@ type Demo = {
   address: string;
   whatsappE164: string;
   primaryColor: string;
+  menuStyle: "NOCTURNO" | "MANTEL" | "MOSTRADOR";
   deliveryEnabled: boolean;
   deliveryFeeCents: number;
   minOrderCents: number;
@@ -71,6 +72,7 @@ const PIZZERIA: Demo = {
   address: "Av. Sarmiento 820, San Miguel de Tucumán",
   whatsappE164: "+5493815550101",
   primaryColor: "#9f1239",
+  menuStyle: "NOCTURNO",
   deliveryEnabled: true,
   deliveryFeeCents: pesos(2_000),
   minOrderCents: pesos(15_000),
@@ -177,6 +179,7 @@ const RESTO: Demo = {
   address: "25 de Mayo 455, San Miguel de Tucumán",
   whatsappE164: "+5493815550102",
   primaryColor: "#166534",
+  menuStyle: "MANTEL",
   deliveryEnabled: true,
   deliveryFeeCents: pesos(2_500),
   minOrderCents: pesos(10_000),
@@ -289,6 +292,7 @@ const CAFE: Demo = {
   address: "Laprida 310, San Miguel de Tucumán",
   whatsappE164: "+5493815550103",
   primaryColor: "#facc15",
+  menuStyle: "MOSTRADOR",
   deliveryEnabled: true,
   deliveryFeeCents: 0,
   minOrderCents: pesos(12_000),
@@ -429,6 +433,7 @@ async function crearDemo(demo: Demo, passwordHash: string) {
       address: demo.address,
       whatsappE164: demo.whatsappE164,
       primaryColor: demo.primaryColor,
+      menuStyle: demo.menuStyle,
       deliveryEnabled: demo.deliveryEnabled,
       deliveryFeeCents: demo.deliveryFeeCents,
       minOrderCents: demo.minOrderCents,

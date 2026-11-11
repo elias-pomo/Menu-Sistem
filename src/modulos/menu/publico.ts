@@ -59,6 +59,7 @@ export async function obtenerMenuPublico(slug: string): Promise<MenuPublico | nu
       acceptTransfer: negocio.acceptTransfer,
       showPhotos: negocio.showPhotos,
       showDescriptions: negocio.showDescriptions,
+      menuStyle: negocio.menuStyle,
       menuVersion: negocio.menuVersion,
       timezone: negocio.timezone,
       openingHours: negocio.openingHours.map(({ weekday, opensMin, closesMin }) => ({ weekday, opensMin, closesMin })),

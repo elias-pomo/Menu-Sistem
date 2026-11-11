@@ -29,5 +29,5 @@ async function Contenido({ params }: { params: PageProps<"/[slug]/pedido/[token]
   const buscar = obtenerSeguimiento(slug, token, ip).catch((e) => (e instanceof AppError && e.code === "RATE_LIMITED" ? null : Promise.reject(e)));
   const [pedido, menu] = await Promise.all([buscar, obtenerMenuPublico(slug)]);
   if (!pedido || !menu) notFound();
-  return <SeguimientoPedido slug={slug} token={token} inicial={pedido} color={menu.business.primaryColor} />;
+  return <SeguimientoPedido slug={slug} token={token} inicial={pedido} color={menu.business.primaryColor} estilo={menu.business.menuStyle} />;
 }

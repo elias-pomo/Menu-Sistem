@@ -1,3 +1,4 @@
+import type { EstiloMenu } from "./estilos";
 import type { ProductoMenu, TipoGrupo } from "@/modulos/pedidos/calculo";
 
 /**
@@ -45,6 +46,7 @@ export type NegocioPublico = {
   acceptTransfer: boolean;
   showPhotos: boolean;
   showDescriptions: boolean;
+  menuStyle: EstiloMenu;
   menuVersion: number;
   timezone: string;
   openingHours: { weekday: number; opensMin: number; closesMin: number }[];

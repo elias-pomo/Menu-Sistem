@@ -18,6 +18,13 @@ enum Role {
   STAFF
 }
 
+/// Estilo visual del menú público: cada local elige uno en Ajustes y lo combina con su color.
+enum MenuStyle {
+  NOCTURNO // oscuro, tipografía condensada: pizzerías, hamburgueserías, bares
+  MANTEL // papel claro, serif clásica, carta con puntos guía: restaurantes
+  MOSTRADOR // cálido y redondeado, tarjetas en grilla: cafeterías, panaderías
+}
+
 enum OptionGroupKind {
   CHOICE // elegir entre opciones, con adicional opcional
   REMOVE // ingredientes quitables, sin adicional
@@ -54,30 +61,31 @@ enum CancelReason {
 }
 
 model Business {
-  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  slug                String   @unique @db.VarChar(40)
-  name                String   @db.VarChar(80)
-  address             String?  @db.VarChar(160)
-  logoUrl             String?  @map("logo_url")
-  primaryColor        String   @default("#c2410c") @map("primary_color") @db.VarChar(7)
-  whatsappE164        String?  @map("whatsapp_e164") @db.VarChar(20)
-  acceptingOrders     Boolean  @default(true) @map("accepting_orders")
-  pauseMessage        String?  @map("pause_message") @db.VarChar(200)
-  deliveryEnabled     Boolean  @default(false) @map("delivery_enabled")
-  deliveryFeeCents    Int      @default(0) @map("delivery_fee_cents")
-  minOrderCents       Int      @default(0) @map("min_order_cents")
-  acceptCash          Boolean  @default(true) @map("accept_cash")
-  acceptTransfer      Boolean  @default(false) @map("accept_transfer")
-  transferAlias       String?  @map("transfer_alias") @db.VarChar(60)
-  transferHolder      String?  @map("transfer_holder") @db.VarChar(80)
-  autoConfirm         Boolean  @default(false) @map("auto_confirm")
-  pendingAlertMinutes Int      @default(15) @map("pending_alert_minutes") @db.SmallInt
-  showPhotos          Boolean  @default(true) @map("show_photos")
-  showDescriptions    Boolean  @default(true) @map("show_descriptions")
-  menuVersion         Int      @default(1) @map("menu_version")
-  timezone            String   @default("America/Argentina/Buenos_Aires") @db.VarChar(40)
-  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt           DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  slug                String    @unique @db.VarChar(40)
+  name                String    @db.VarChar(80)
+  address             String?   @db.VarChar(160)
+  logoUrl             String?   @map("logo_url")
+  primaryColor        String    @default("#c2410c") @map("primary_color") @db.VarChar(7)
+  whatsappE164        String?   @map("whatsapp_e164") @db.VarChar(20)
+  acceptingOrders     Boolean   @default(true) @map("accepting_orders")
+  pauseMessage        String?   @map("pause_message") @db.VarChar(200)
+  deliveryEnabled     Boolean   @default(false) @map("delivery_enabled")
+  deliveryFeeCents    Int       @default(0) @map("delivery_fee_cents")
+  minOrderCents       Int       @default(0) @map("min_order_cents")
+  acceptCash          Boolean   @default(true) @map("accept_cash")
+  acceptTransfer      Boolean   @default(false) @map("accept_transfer")
+  transferAlias       String?   @map("transfer_alias") @db.VarChar(60)
+  transferHolder      String?   @map("transfer_holder") @db.VarChar(80)
+  autoConfirm         Boolean   @default(false) @map("auto_confirm")
+  pendingAlertMinutes Int       @default(15) @map("pending_alert_minutes") @db.SmallInt
+  showPhotos          Boolean   @default(true) @map("show_photos")
+  showDescriptions    Boolean   @default(true) @map("show_descriptions")
+  menuStyle           MenuStyle @default(MANTEL) @map("menu_style")
+  menuVersion         Int       @default(1) @map("menu_version")
+  timezone            String    @default("America/Argentina/Buenos_Aires") @db.VarChar(40)
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   users             AppUser[]
   pushSubscriptions PushSubscription[]
